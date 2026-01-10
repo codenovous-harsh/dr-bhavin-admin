@@ -1,0 +1,177 @@
+/* Green Theme with Radial Gradient Colors */
+/* Uses #27A48C to #0F3E35 gradient colors while maintaining green theme structure */
+
+.theme-green {
+  /* Override chart colors with gradient palette */
+  --chart-1: #27a48c;
+  --chart-2: #1f8a75;
+  --chart-3: #17675a;
+  --chart-4: #0f3e35;
+  --chart-5: #2fb899;
+
+  /* Buttons with gradient */
+  button[data-variant='default'],
+  .btn-primary {
+    background: linear-gradient(135deg, #27a48c 0%, #0f3e35 100%) !important;
+    border: none;
+    color: white !important;
+  }
+
+  button[data-variant='default']:hover,
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #2fb899 0%, #124a3f 100%) !important;
+    opacity: 0.95;
+  }
+
+  /* Active states with full gradient like sign-in button */
+  [data-sidebar] button[data-active='true'],
+  [data-sidebar] a[data-active='true'] {
+    background: linear-gradient(135deg, #27a48c 0%, #0f3e35 100%) !important;
+    color: white !important;
+    border-left: none;
+  }
+
+  [data-sidebar] button[data-active='true'] span,
+  [data-sidebar] a[data-active='true'] span,
+  [data-sidebar] button[data-active='true'] svg,
+  [data-sidebar] a[data-active='true'] svg {
+    color: white !important;
+  }
+
+  [data-sidebar] button:hover:not([data-active='true']),
+  [data-sidebar] a:hover:not([data-active='true']) {
+    background: rgba(39, 164, 140, 0.08);
+  }
+
+  /* Badges with gradient colors */
+  .badge-default {
+    background: rgba(39, 164, 140, 0.1);
+    color: #0f3e35;
+    border: 1px solid rgba(39, 164, 140, 0.3);
+  }
+
+  /* Progress bars */
+  [role='progressbar'] > div {
+    background: linear-gradient(90deg, #27a48c 0%, #0f3e35 100%);
+  }
+
+  /* Switch/Toggle checked state */
+  [role='switch'][data-state='checked'] {
+    background: linear-gradient(135deg, #27a48c 0%, #0f3e35 100%);
+  }
+
+  /* Tab active indicator */
+  [role='tab'][data-state='active'] {
+    border-bottom: 2px solid #27a48c;
+  }
+
+  /* Focus rings */
+  *:focus-visible {
+    outline-color: #27a48c;
+  }
+
+  /* Dropdown item hover */
+  [role='menuitem']:hover {
+    background: rgba(39, 164, 140, 0.05);
+  }
+
+  /* Selected items */
+  [data-state='checked'],
+  [aria-selected='true'] {
+    background: rgba(39, 164, 140, 0.08);
+  }
+
+  /* Links */
+  a {
+    color: #27a48c;
+  }
+
+  a:hover {
+    color: #1f8a75;
+  }
+
+  /* Input focus */
+  input:focus,
+  textarea:focus,
+  select:focus {
+    border-color: #27a48c !important;
+    box-shadow: 0 0 0 3px rgba(39, 164, 140, 0.1) !important;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #27a48c 0%, #0f3e35 100%);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #2fb899 0%, #124a3f 100%);
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(39, 164, 140, 0.03);
+  }
+
+  /* Success/info alerts */
+  .alert-success,
+  .alert-info {
+    border-left: 4px solid #27a48c;
+    background: rgba(39, 164, 140, 0.05);
+  }
+}
+
+/* Dark mode adjustments */
+.dark .theme-green {
+  /* Darker gradient variations for dark mode */
+  --chart-1: #4ecdb4;
+  --chart-2: #3ab5a0;
+  --chart-3: #2fa08c;
+  --chart-4: #27a48c;
+  --chart-5: #5fd5bb;
+
+  /* Active states in dark with gradient */
+  [data-sidebar] button[data-active='true'],
+  [data-sidebar] a[data-active='true'] {
+    background: linear-gradient(135deg, #27a48c 0%, #0f3e35 100%) !important;
+    color: white !important;
+    border-left: none;
+  }
+
+  [data-sidebar] button[data-active='true'] span,
+  [data-sidebar] a[data-active='true'] span,
+  [data-sidebar] button[data-active='true'] svg,
+  [data-sidebar] a[data-active='true'] svg {
+    color: white !important;
+  }
+
+  [data-sidebar] button:hover:not([data-active='true']),
+  [data-sidebar] a:hover:not([data-active='true']) {
+    background: rgba(39, 164, 140, 0.1);
+  }
+
+  /* Dark badge */
+  .badge-default {
+    background: rgba(39, 164, 140, 0.15);
+    color: #a8d5cd;
+    border: 1px solid rgba(39, 164, 140, 0.4);
+  }
+
+  /* Dark scrollbar track */
+  ::-webkit-scrollbar-track {
+    background: rgba(39, 164, 140, 0.05);
+  }
+
+  /* Links in dark mode */
+  a {
+    color: #4ecdb4;
+  }
+
+  a:hover {
+    color: #5fd5bb;
+  }
+}
+
+/* Scaled variant */
+.theme-green-scaled {
+  /* Inherits all green theme styles */
+}

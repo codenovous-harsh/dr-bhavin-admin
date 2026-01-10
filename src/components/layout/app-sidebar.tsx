@@ -31,7 +31,6 @@ import {
 import { UserAvatarProfile } from '@/components/user-avatar-profile';
 import { navItems } from '@/config/nav-config';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { useOrganization, useUser } from '@clerk/nextjs';
 import { useFilteredNavItems } from '@/hooks/use-nav';
 import {
   IconBell,
@@ -41,18 +40,33 @@ import {
   IconLogout,
   IconUserCircle
 } from '@tabler/icons-react';
-import { SignOutButton } from '@clerk/nextjs';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import * as React from 'react';
 import { Icons } from '../icons';
-import { OrgSwitcher } from '../org-switcher';
+import Image from 'next/image';
+
+// Dummy user and organization data
+const dummyUser = {
+  id: '1',
+  fullName: 'John Doe',
+  firstName: 'John',
+  lastName: 'Doe',
+  emailAddresses: [{ emailAddress: 'john.doe@example.com' }],
+  imageUrl: null
+};
+
+const dummyOrganization = {
+  id: '1',
+  name: 'Bhavin Garara Corp',
+  slug: 'bhavin-garara-corp'
+};
 
 export default function AppSidebar() {
   const pathname = usePathname();
   const { isOpen } = useMediaQuery();
-  const { user } = useUser();
-  const { organization } = useOrganization();
+  const user = dummyUser; // Using dummy user
+  const organization = dummyOrganization; // Using dummy organization
   const router = useRouter();
   const filteredItems = useFilteredNavItems(navItems);
 
@@ -63,11 +77,22 @@ export default function AppSidebar() {
   return (
     <Sidebar collapsible='icon'>
       <SidebarHeader>
-        <OrgSwitcher />
+        <div className='flex items-center justify-center p-4'>
+          <Image
+            src='/assets/dashboardLogo.svg'
+            alt='Bhavin Garara'
+            width={180}
+            height={60}
+            className='h-12 w-auto object-contain'
+            priority
+          />
+        </div>
       </SidebarHeader>
       <SidebarContent className='overflow-x-hidden'>
         <SidebarGroup>
-          <SidebarGroupLabel>Overview</SidebarGroupLabel>
+          <SidebarGroupLabel className='text-muted-foreground mb-2 px-2 text-xs font-semibold'>
+            MAIN MENU
+          </SidebarGroupLabel>
           <SidebarMenu>
             {filteredItems.map((item) => {
               const Icon = item.icon ? Icons[item.icon] : Icons.logo;
@@ -83,10 +108,12 @@ export default function AppSidebar() {
                       <SidebarMenuButton
                         tooltip={item.title}
                         isActive={pathname === item.url}
+                        size='lg'
+                        className='h-12 text-sm font-medium'
                       >
-                        {item.icon && <Icon />}
-                        <span>{item.title}</span>
-                        <IconChevronRight className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
+                        {item.icon && <Icon className='h-5 w-5' />}
+                        <span className='text-sm'>{item.title}</span>
+                        <IconChevronRight className='ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
                       </SidebarMenuButton>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
@@ -96,6 +123,7 @@ export default function AppSidebar() {
                             <SidebarMenuSubButton
                               asChild
                               isActive={pathname === subItem.url}
+                              className='h-10 text-sm'
                             >
                               <Link href={subItem.url}>
                                 <span>{subItem.title}</span>
@@ -113,10 +141,12 @@ export default function AppSidebar() {
                     asChild
                     tooltip={item.title}
                     isActive={pathname === item.url}
+                    size='lg'
+                    className='h-12 text-sm font-medium'
                   >
-                    <Link href={item.url}>
-                      <Icon />
-                      <span>{item.title}</span>
+                    <Link href={item.url} className='flex items-center'>
+                      <Icon className='mr-3 h-5 w-5' />
+                      <span className='text-sm'>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -184,9 +214,9 @@ export default function AppSidebar() {
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/auth/sign-in')}>
                   <IconLogout className='mr-2 h-4 w-4' />
-                  <SignOutButton redirectUrl='/auth/sign-in' />
+                  Sign Out (Dummy)
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -30,8 +30,9 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const cookieStore = await cookies();
-  const activeThemeValue = cookieStore.get('active_theme')?.value;
-  const isScaled = activeThemeValue?.endsWith('-scaled');
+  // Force green theme always
+  const activeThemeValue = 'green';
+  const isScaled = false;
 
   return (
     <html lang='en' suppressHydrationWarning>

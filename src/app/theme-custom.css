@@ -1,0 +1,214 @@
+/* Custom Bhavin Garara Theme with Radial Gradient */
+
+:root {
+  /* Premium Teal/Cyan color palette based on your screenshot */
+  --teal-400: #27a48c;
+  --teal-900: #0f3e35;
+
+  /* Override primary colors with your theme */
+  --primary: oklch(0.65 0.15 165);
+  --primary-foreground: oklch(0.98 0 0);
+
+  /* Custom gradient variables */
+  --gradient-start: #27a48c;
+  --gradient-end: #0f3e35;
+
+  /* Premium accent colors */
+  --accent: oklch(0.75 0.12 165);
+  --accent-foreground: oklch(0.15 0 0);
+
+  /* Card styling for premium look */
+  --card: oklch(0.99 0 0);
+  --card-foreground: oklch(0.2 0 0);
+
+  /* Update sidebar with theme colors */
+  --sidebar: oklch(0.98 0.01 165);
+  --sidebar-primary: oklch(0.65 0.15 165);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+
+  /* Premium border styling */
+  --border: oklch(0.9 0.02 165);
+  --input: oklch(0.95 0.01 165);
+  --ring: oklch(0.65 0.15 165);
+}
+
+.dark {
+  /* Dark mode with premium feel */
+  --primary: oklch(0.65 0.15 165);
+  --primary-foreground: oklch(0.98 0 0);
+
+  --background: oklch(0.1 0.01 165);
+  --foreground: oklch(0.95 0 0);
+
+  --card: oklch(0.15 0.02 165);
+  --card-foreground: oklch(0.95 0 0);
+
+  --popover: oklch(0.18 0.02 165);
+  --popover-foreground: oklch(0.95 0 0);
+
+  --secondary: oklch(0.25 0.03 165);
+  --secondary-foreground: oklch(0.95 0 0);
+
+  --muted: oklch(0.22 0.02 165);
+  --muted-foreground: oklch(0.65 0.02 165);
+
+  --accent: oklch(0.35 0.08 165);
+  --accent-foreground: oklch(0.95 0 0);
+
+  --border: oklch(0.25 0.03 165);
+  --input: oklch(0.25 0.03 165);
+  --ring: oklch(0.65 0.15 165);
+
+  /* Dark sidebar with theme */
+  --sidebar: oklch(0.12 0.02 165);
+  --sidebar-foreground: oklch(0.95 0 0);
+  --sidebar-primary: oklch(0.65 0.15 165);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.25 0.03 165);
+  --sidebar-accent-foreground: oklch(0.95 0 0);
+  --sidebar-border: oklch(0.25 0.03 165);
+}
+
+/* Premium Gradient Utilities */
+.gradient-bg {
+  background: radial-gradient(ellipse at top, #27a48c 0%, #0f3e35 100%);
+}
+
+.gradient-bg-reverse {
+  background: radial-gradient(ellipse at bottom, #27a48c 0%, #0f3e35 100%);
+}
+
+.gradient-bg-left {
+  background: radial-gradient(ellipse at left, #27a48c 0%, #0f3e35 100%);
+}
+
+.gradient-bg-right {
+  background: radial-gradient(ellipse at right, #27a48c 0%, #0f3e35 100%);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #27a48c 0%, #0f3e35 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass morphism effects */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-effect-dark {
+  background: rgba(15, 62, 53, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(39, 164, 140, 0.2);
+}
+
+/* Premium button styles */
+.btn-premium {
+  background: linear-gradient(135deg, #27a48c 0%, #0f3e35 100%);
+  color: white;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-premium::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.btn-premium:hover::before {
+  left: 100%;
+}
+
+/* Premium card hover effects */
+.card-premium {
+  transition: all 0.3s ease;
+  background: white;
+  border: 1px solid rgba(39, 164, 140, 0.1);
+}
+
+.card-premium:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(39, 164, 140, 0.15);
+  border-color: rgba(39, 164, 140, 0.3);
+}
+
+.dark .card-premium {
+  background: oklch(0.15 0.02 165);
+  border: 1px solid rgba(39, 164, 140, 0.2);
+}
+
+.dark .card-premium:hover {
+  box-shadow: 0 20px 40px rgba(39, 164, 140, 0.1);
+  border-color: rgba(39, 164, 140, 0.4);
+}
+
+/* Animated gradient background */
+.animated-gradient {
+  background: linear-gradient(270deg, #27a48c, #0f3e35, #27a48c);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Premium scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(39, 164, 140, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #27a48c, #0f3e35);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #0f3e35, #27a48c);
+}
+
+/* Premium focus styles */
+*:focus-visible {
+  outline: 2px solid #27a48c;
+  outline-offset: 2px;
+}
+
+/* Premium selection */
+::selection {
+  background: rgba(39, 164, 140, 0.3);
+  color: #0f3e35;
+}
+
+.dark ::selection {
+  background: rgba(39, 164, 140, 0.4);
+  color: white;
+}

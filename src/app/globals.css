@@ -5,6 +5,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @import './theme.css';
+@import './theme-custom.css';
+@import './theme-radial-gradient.css';
+@import './theme-green.css';
+@import './theme-sidebar.css';
 
 :root {
   --radius: 0.625rem;

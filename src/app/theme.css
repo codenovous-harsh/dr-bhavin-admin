@@ -50,12 +50,12 @@ body {
 
 .theme-green,
 .theme-green-scaled {
-  --primary: var(--color-lime-600);
-  --primary-foreground: var(--color-lime-50);
+  --primary: #27a48c;
+  --primary-foreground: #ffffff;
 
   @variant dark {
-    --primary: var(--color-lime-600);
-    --primary-foreground: var(--color-lime-50);
+    --primary: #27a48c;
+    --primary-foreground: #ffffff;
   }
 }
 
@@ -67,6 +67,64 @@ body {
   @variant dark {
     --primary: var(--color-amber-500);
     --primary-foreground: var(--color-amber-50);
+  }
+}
+
+.theme-radial-gradient,
+.theme-radial-gradient-scaled {
+  /* Bhavin Garara Radial Gradient Theme */
+  --primary: #27a48c;
+  --primary-foreground: #ffffff;
+  --secondary: #0f3e35;
+  --secondary-foreground: #ffffff;
+  --accent: #27a48c;
+  --accent-foreground: #ffffff;
+  --muted: #e6f4f1;
+  --muted-foreground: #0f3e35;
+  --card: #ffffff;
+  --card-foreground: #0f3e35;
+  --popover: #ffffff;
+  --popover-foreground: #0f3e35;
+  --border: #d4e9e5;
+  --input: #e6f4f1;
+  --ring: #27a48c;
+
+  /* Sidebar specific colors */
+  --sidebar-primary: #27a48c;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e6f4f1;
+  --sidebar-accent-foreground: #0f3e35;
+
+  /* Custom gradient variables */
+  --gradient-radial: radial-gradient(
+    circle at 30% 50%,
+    #27a48c 0%,
+    #0f3e35 70%
+  );
+  --gradient-linear: linear-gradient(135deg, #27a48c 0%, #0f3e35 100%);
+
+  @variant dark {
+    --primary: #27a48c;
+    --primary-foreground: #ffffff;
+    --secondary: #0f3e35;
+    --secondary-foreground: #ffffff;
+    --accent: #27a48c;
+    --accent-foreground: #ffffff;
+    --muted: #1a4a3f;
+    --muted-foreground: #a8d5cd;
+    --card: #0a2821;
+    --card-foreground: #e6f4f1;
+    --popover: #0a2821;
+    --popover-foreground: #e6f4f1;
+    --border: #1a4a3f;
+    --input: #1a4a3f;
+    --ring: #27a48c;
+
+    /* Dark mode sidebar */
+    --sidebar-primary: #27a48c;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #1a4a3f;
+    --sidebar-accent-foreground: #a8d5cd;
   }
 }
 

@@ -1,0 +1,282 @@
+/* Radial Gradient Theme Enhancements */
+/* This theme uses gradient backgrounds for cards and charts while keeping sidebar white */
+
+.theme-radial-gradient {
+  /* Keep sidebar clean and white */
+  [data-sidebar] {
+    background: white !important;
+  }
+
+  /* Sidebar hover and active states with subtle accent */
+  [data-sidebar] button[data-active='true'],
+  [data-sidebar] a[data-active='true'] {
+    background: rgba(39, 164, 140, 0.08);
+    border-left: 3px solid #27a48c;
+  }
+
+  [data-sidebar] button:hover:not([data-active='true']),
+  [data-sidebar] a:hover:not([data-active='true']) {
+    background: rgba(39, 164, 140, 0.04);
+  }
+
+  /* Dashboard metric cards with gradient background */
+  .grid > div:has(h3),
+  [data-metric-card],
+  .space-y-2:has(.text-2xl) {
+    background: linear-gradient(135deg, #27a48c 0%, #0f3e35 100%) !important;
+    color: white !important;
+  }
+
+  /* Ensure text in gradient cards is white */
+  .grid > div:has(h3) *,
+  [data-metric-card] *,
+  .space-y-2:has(.text-2xl) * {
+    color: white !important;
+  }
+
+  /* Main dashboard cards (charts) with gradient background */
+  .card:has([data-chart]),
+  .card:has(canvas),
+  .card:has(.recharts-wrapper) {
+    background: linear-gradient(135deg, #27a48c 0%, #0f3e35 100%) !important;
+    border: none !important;
+  }
+
+  /* White text for chart cards */
+  .card:has([data-chart]) .card-header *,
+  .card:has(canvas) .card-header *,
+  .card:has(.recharts-wrapper) .card-header * {
+    color: white !important;
+  }
+
+  /* Recent sales card - keep white */
+  .card:has(.space-y-8),
+  .card:not(:has([data-chart])):not(:has(canvas)):not(
+      :has(.recharts-wrapper)
+    ):not(:has(h3)) {
+    background: white !important;
+  }
+
+  /* Primary buttons with gradient */
+  button[data-variant='default'],
+  .btn-primary {
+    background: linear-gradient(135deg, #27a48c 0%, #0f3e35 100%) !important;
+    border: none;
+    color: white !important;
+  }
+
+  button[data-variant='default']:hover,
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #2fb899 0%, #124a3f 100%) !important;
+    opacity: 0.95;
+  }
+
+  /* Charts using lighter gradient colors for visibility */
+  [data-chart] {
+    --chart-1: #4ecdb4;
+    --chart-2: #3ab5a0;
+    --chart-3: #2fa08c;
+    --chart-4: #27a48c;
+    --chart-5: #5fd5bb;
+  }
+
+  /* Bar charts specifically */
+  .recharts-bar-rectangle path {
+    fill: #4ecdb4 !important;
+  }
+
+  /* Progress bars with gradient */
+  [role='progressbar'] > div {
+    background: linear-gradient(90deg, #27a48c 0%, #0f3e35 100%);
+  }
+
+  /* Badges */
+  .badge-default {
+    background: rgba(39, 164, 140, 0.1);
+    color: #0f3e35;
+    border: 1px solid rgba(39, 164, 140, 0.3);
+  }
+
+  /* Pills/Tags with gradient background and white text */
+  [data-orientation='horizontal'] span:has(svg),
+  .inline-flex.items-center.gap-2 {
+    background: linear-gradient(135deg, #27a48c 0%, #0f3e35 100%);
+    color: white !important;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+  }
+
+  /* Switch/Toggle checked state */
+  [role='switch'][data-state='checked'] {
+    background: linear-gradient(135deg, #27a48c 0%, #0f3e35 100%);
+  }
+
+  /* Tab active indicator */
+  [role='tab'][data-state='active'] {
+    border-bottom: 2px solid #27a48c;
+  }
+
+  /* Avatar rings with gradient */
+  .avatar-ring {
+    background: linear-gradient(135deg, #27a48c 0%, #0f3e35 100%);
+  }
+
+  /* Dropdown item hover */
+  [role='menuitem']:hover {
+    background: rgba(39, 164, 140, 0.05);
+  }
+
+  /* Selected items */
+  [data-state='checked'],
+  [aria-selected='true'] {
+    background: rgba(39, 164, 140, 0.08);
+  }
+
+  /* Focus rings */
+  *:focus-visible {
+    outline-color: #27a48c;
+  }
+
+  /* Scrollbar - subtle gradient */
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #27a48c 0%, #0f3e35 100%);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #2fb899 0%, #124a3f 100%);
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(39, 164, 140, 0.03);
+  }
+
+  /* Search bar with gradient accent */
+  input[type='search'] {
+    background: white !important;
+    border: 1px solid rgba(39, 164, 140, 0.2) !important;
+  }
+
+  input[type='search']:focus {
+    border-color: #27a48c !important;
+    box-shadow: 0 0 0 3px rgba(39, 164, 140, 0.1) !important;
+  }
+
+  /* User menu button gradient */
+  button:has(.avatar) {
+    background: linear-gradient(135deg, #27a48c 0%, #0f3e35 100%) !important;
+  }
+
+  /* Theme selector gradient accent */
+  button[role='combobox'] {
+    background: linear-gradient(135deg, #27a48c 0%, #0f3e35 100%) !important;
+    color: white !important;
+  }
+
+  /* Info/Success alerts with gradient accent */
+  .alert-success {
+    border-left: 4px solid #27a48c;
+    background: rgba(39, 164, 140, 0.05);
+  }
+}
+
+/* Dark mode adjustments */
+.dark .theme-radial-gradient {
+  /* Keep sidebar dark */
+  [data-sidebar] {
+    background: rgb(31, 31, 31) !important;
+  }
+
+  [data-sidebar] button[data-active='true'],
+  [data-sidebar] a[data-active='true'] {
+    background: rgba(39, 164, 140, 0.15);
+    border-left: 3px solid #27a48c;
+  }
+
+  [data-sidebar] button:hover:not([data-active='true']),
+  [data-sidebar] a:hover:not([data-active='true']) {
+    background: rgba(39, 164, 140, 0.08);
+  }
+
+  /* Dashboard metric cards with gradient in dark mode */
+  .grid > div:has(h3),
+  [data-metric-card],
+  .space-y-2:has(.text-2xl) {
+    background: linear-gradient(135deg, #1f8a75 0%, #0a2821 100%) !important;
+    color: white !important;
+  }
+
+  /* Main dashboard cards (charts) with darker gradient */
+  .card:has([data-chart]),
+  .card:has(canvas),
+  .card:has(.recharts-wrapper) {
+    background: linear-gradient(135deg, #1f8a75 0%, #0a2821 100%) !important;
+    border: none !important;
+  }
+
+  /* Recent sales card - keep dark */
+  .card:has(.space-y-8),
+  .card:not(:has([data-chart])):not(:has(canvas)):not(
+      :has(.recharts-wrapper)
+    ):not(:has(h3)) {
+    background: rgb(38, 38, 38) !important;
+  }
+
+  /* Dark badge */
+  .badge-default {
+    background: rgba(39, 164, 140, 0.15);
+    color: #a8d5cd;
+    border: 1px solid rgba(39, 164, 140, 0.4);
+  }
+
+  /* Dark scrollbar track */
+  ::-webkit-scrollbar-track {
+    background: rgba(39, 164, 140, 0.05);
+  }
+
+  /* Search bar in dark mode */
+  input[type='search'] {
+    background: rgb(38, 38, 38) !important;
+    border: 1px solid rgba(39, 164, 140, 0.3) !important;
+  }
+
+  /* User menu button gradient in dark mode */
+  button:has(.avatar) {
+    background: linear-gradient(135deg, #1f8a75 0%, #0a2821 100%) !important;
+  }
+
+  /* Theme selector gradient in dark mode */
+  button[role='combobox'] {
+    background: linear-gradient(135deg, #1f8a75 0%, #0a2821 100%) !important;
+    color: white !important;
+  }
+}
+
+/* Special gradient background for specific sections only */
+.theme-radial-gradient {
+  /* Hero sections with gradient background */
+  .hero-gradient {
+    background: radial-gradient(circle at 30% 50%, #27a48c 0%, #0f3e35 70%);
+  }
+
+  /* Gradient overlays for images */
+  .gradient-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(39, 164, 140, 0.8) 0%,
+      rgba(15, 62, 53, 0.9) 100%
+    );
+    pointer-events: none;
+  }
+
+  /* Gradient text for headings */
+  .gradient-text {
+    background: linear-gradient(135deg, #27a48c 0%, #0f3e35 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}

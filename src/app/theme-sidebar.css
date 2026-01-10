@@ -1,0 +1,67 @@
+/* Sidebar Active State with Radial Gradient */
+/* Apply to all themes - not just green */
+
+/* Light mode active state */
+[data-sidebar] button[data-active='true'],
+[data-sidebar] a[data-active='true'],
+[data-sidebar] [data-active='true'] {
+  background: linear-gradient(135deg, #27a48c 0%, #0f3e35 100%) !important;
+  color: white !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ensure all child elements are white */
+[data-sidebar] button[data-active='true'] *,
+[data-sidebar] a[data-active='true'] *,
+[data-sidebar] [data-active='true'] * {
+  color: white !important;
+  fill: white !important;
+}
+
+/* Hover state for non-active items */
+[data-sidebar] button:not([data-active='true']):hover,
+[data-sidebar] a:not([data-active='true']):hover {
+  background: rgba(39, 164, 140, 0.08) !important;
+}
+
+/* Dark mode active state */
+.dark [data-sidebar] button[data-active='true'],
+.dark [data-sidebar] a[data-active='true'],
+.dark [data-sidebar] [data-active='true'] {
+  background: linear-gradient(135deg, #27a48c 0%, #0f3e35 100%) !important;
+  color: white !important;
+}
+
+/* Dark mode - ensure all child elements are white */
+.dark [data-sidebar] button[data-active='true'] *,
+.dark [data-sidebar] a[data-active='true'] *,
+.dark [data-sidebar] [data-active='true'] * {
+  color: white !important;
+  fill: white !important;
+}
+
+/* Dark mode hover state */
+.dark [data-sidebar] button:not([data-active='true']):hover,
+.dark [data-sidebar] a:not([data-active='true']):hover {
+  background: rgba(39, 164, 140, 0.1) !important;
+}
+
+/* Add rounded corners to match the button style */
+[data-sidebar] button[data-active='true'],
+[data-sidebar] a[data-active='true'] {
+  border-radius: 0.5rem;
+}
+
+/* Remove any borders that might interfere */
+[data-sidebar] button[data-active='true'],
+[data-sidebar] a[data-active='true'] {
+  border: none !important;
+  border-left: none !important;
+}
+
+/* Ensure the gradient is visible on collapsed sidebar too */
+[data-state='collapsed'] [data-sidebar] button[data-active='true'],
+[data-state='collapsed'] [data-sidebar] a[data-active='true'] {
+  background: linear-gradient(135deg, #27a48c 0%, #0f3e35 100%) !important;
+}

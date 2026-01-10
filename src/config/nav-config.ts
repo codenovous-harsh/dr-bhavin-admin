@@ -42,58 +42,34 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
-    title: 'Workspaces',
-    url: '/dashboard/workspaces',
-    icon: 'workspace',
+    title: 'Patients',
+    url: '/dashboard/patients',
+    icon: 'users',
     isActive: false,
-    items: []
-  },
-  {
-    title: 'Teams',
-    url: '/dashboard/workspaces/team',
-    icon: 'teams',
-    isActive: false,
-    items: [],
-    // Require organization to be active
-    access: { requireOrg: true }
-    // Alternative: require specific permission
-    // access: { requireOrg: true, permission: 'org:teams:view' }
-  },
-  {
-    title: 'Product',
-    url: '/dashboard/product',
-    icon: 'product',
     shortcut: ['p', 'p'],
-    isActive: false,
     items: []
   },
   {
-    title: 'Kanban',
-    url: '/dashboard/kanban',
-    icon: 'kanban',
-    shortcut: ['k', 'k'],
+    title: 'Treatments',
+    url: '/dashboard/treatments',
+    icon: 'health',
     isActive: false,
+    shortcut: ['t', 't'],
     items: []
   },
   {
-    title: 'Pro',
-    url: '#', // Placeholder as there is no direct link for the parent
-    icon: 'pro',
-    isActive: true,
-    items: [
-      {
-        title: 'Exclusive',
-        url: '/dashboard/exclusive',
-        icon: 'exclusive',
-        shortcut: ['m', 'm']
-      }
-    ]
+    title: 'Blogs',
+    url: '/dashboard/blogs',
+    icon: 'blog',
+    isActive: false,
+    shortcut: ['b', 'b'],
+    items: []
   },
   {
     title: 'Account',
     url: '#', // Placeholder as there is no direct link for the parent
     icon: 'account',
-    isActive: true,
+    isActive: false,
     items: [
       {
         title: 'Profile',
@@ -102,20 +78,10 @@ export const navItems: NavItem[] = [
         shortcut: ['m', 'm']
       },
       {
-        title: 'Billing',
-        url: '/dashboard/billing',
-        icon: 'billing',
-        shortcut: ['b', 'b'],
-        // Only show billing if in organization context
-        access: { requireOrg: true }
-        // Alternative: require billing management permission
-        // access: { requireOrg: true, permission: 'org:manage:billing' }
-      },
-      {
-        title: 'Login',
-        shortcut: ['l', 'l'],
-        url: '/',
-        icon: 'login'
+        title: 'Settings',
+        url: '/dashboard/settings',
+        icon: 'settings',
+        shortcut: ['s', 's']
       }
     ]
   }

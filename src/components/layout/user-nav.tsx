@@ -10,11 +10,22 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { UserAvatarProfile } from '@/components/user-avatar-profile';
-import { SignOutButton, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
+
+// Dummy user data
+const dummyUser = {
+  id: '1',
+  fullName: 'John Doe',
+  firstName: 'John',
+  lastName: 'Doe',
+  emailAddresses: [{ emailAddress: 'john.doe@example.com' }],
+  imageUrl: null
+};
+
 export function UserNav() {
-  const { user } = useUser();
   const router = useRouter();
+  const user = dummyUser; // Using dummy user data
+
   if (user) {
     return (
       <DropdownMenu>
@@ -49,8 +60,8 @@ export function UserNav() {
             <DropdownMenuItem>New Team</DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <SignOutButton redirectUrl='/auth/sign-in' />
+          <DropdownMenuItem onClick={() => router.push('/auth/sign-in')}>
+            Sign Out (Dummy)
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
