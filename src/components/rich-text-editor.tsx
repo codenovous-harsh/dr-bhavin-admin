@@ -81,20 +81,9 @@ export function RichTextEditor({
 
         console.log('Full upload response:', uploadResponse);
 
-        // Try to extract URL from various possible response structures
-        let imageUrl = null;
-
-        // Try different response structures
-        if (uploadResponse.data?.file?.url) {
-          imageUrl = uploadResponse.data.file.url;
-          console.log('Using data.file.url:', imageUrl);
-        } else if (uploadResponse.data?.url) {
-          imageUrl = uploadResponse.data.url;
-          console.log('Using data.url:', imageUrl);
-        } else if (uploadResponse.data?.file?.location) {
-          imageUrl = uploadResponse.data.file.location;
-          console.log('Using data.file.location:', imageUrl);
-        }
+        // Extract URL from response
+        const imageUrl = uploadResponse.data?.url;
+        console.log('Using data.url:', imageUrl);
 
         // Verify URL is valid
         if (!imageUrl || typeof imageUrl !== 'string') {
