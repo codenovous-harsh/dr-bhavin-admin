@@ -36,6 +36,7 @@ export function RichTextEditor({
   editable = true
 }: RichTextEditorProps) {
   const quillRef = useRef<any>(null);
+  const reactQuillRef = useRef<any>(null);
 
   // Custom image upload handler
   const imageHandler = useCallback(() => {
@@ -60,7 +61,7 @@ export function RichTextEditor({
       }
 
       // Get Quill editor instance BEFORE upload
-      const quill = quillRef.current?.getEditor();
+      const quill = reactQuillRef.current?.getEditor?.() || quillRef.current;
       if (!quill) {
         toast.error('Editor not ready');
         return;
@@ -147,10 +148,18 @@ export function RichTextEditor({
     'image',
   ];
 
+  // Callback ref to capture the ReactQuill instance
+  const setQuillRef = useCallback((ref: any) => {
+    reactQuillRef.current = ref;
+    if (ref) {
+      quillRef.current = ref.getEditor();
+    }
+  }, []);
+
   return (
     <div className={cn('rich-text-editor-wrapper', className)}>
       <ReactQuill
-        ref={quillRef}
+        ref={setQuillRef}
         theme="snow"
         value={value}
         onChange={onChange}
