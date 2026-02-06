@@ -32,11 +32,21 @@ api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      // Clear token and redirect to login
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = '/';
+      // Only auto-logout if we have a token (i.e., this is an authenticated request)
+      // Don't auto-logout on login failures
+      const isLoginRequest = error.config?.url?.includes('/auth/login');
+      const hasToken = typeof window !== 'undefined' && localStorage.getItem('token');
+
+      if (hasToken && !isLoginRequest) {
+        // This is an authenticated request that failed - token likely expired
+        console.warn('Authentication expired, redirecting to login...');
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          // Clear cookie
+          document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax';
+          window.location.href = '/auth/sign-in';
+        }
       }
     }
     return Promise.reject(error);
@@ -217,6 +227,12 @@ class AuthService {
     if (typeof window !== 'undefined') {
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
+
+      // Also store token in cookie for middleware access
+      // Set cookie to expire in 7 days
+      const expires = new Date();
+      expires.setDate(expires.getDate() + 7);
+      document.cookie = `token=${token}; path=/; expires=${expires.toUTCString()}; SameSite=Lax`;
     }
   }
 
@@ -227,6 +243,9 @@ class AuthService {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+
+      // Clear token cookie
+      document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax';
     }
   }
 

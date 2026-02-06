@@ -25,10 +25,10 @@ export default async function DashboardLayout({
       <SidebarProvider defaultOpen={defaultOpen} suppressHydrationWarning>
         <InfobarProvider defaultOpen={false}>
           <AppSidebar />
-          <SidebarInset className="overflow-hidden">
+          <SidebarInset className="flex flex-col overflow-hidden">
             <Header />
             {/* page main content */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1">
               {children}
             </div>
             {/* page main content ends */}

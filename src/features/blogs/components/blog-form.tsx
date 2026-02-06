@@ -2,7 +2,7 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { blogFormSchema, type BlogFormValues, type Blog } from '@/types/blog';
 import { blogService } from '@/services/blog.service';
@@ -32,18 +32,42 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>(initialData?.tags || []);
 
+  // Upload state for featured image
+  const [featuredImageUpload, setFeaturedImageUpload] = useState<{
+    uploading: boolean;
+    url?: string;
+    key?: string;
+    error?: string;
+  }>({
+    uploading: false,
+    url: initialData?.featuredImage?.url,
+    key: initialData?.featuredImage?.key
+  });
+
+  // Upload state for author avatar
+  const [avatarUpload, setAvatarUpload] = useState<{
+    uploading: boolean;
+    url?: string;
+    key?: string;
+    error?: string;
+  }>({
+    uploading: false,
+    url: initialData?.author?.avatar?.url,
+    key: initialData?.author?.avatar?.key
+  });
+
   const form = useForm<BlogFormValues>({
     resolver: zodResolver(blogFormSchema),
     defaultValues: {
       title: initialData?.title || '',
       excerpt: initialData?.excerpt || '',
       content: initialData?.content || '',
-      featuredImageUrl: initialData?.featuredImage.url || '',
-      featuredImageKey: initialData?.featuredImage.key || '',
+      featuredImageUrl: initialData?.featuredImage.url || undefined,
+      featuredImageKey: initialData?.featuredImage.key || undefined,
       author: {
         name: initialData?.author.name || '',
-        avatarUrl: initialData?.author.avatar?.url || '',
-        avatarKey: initialData?.author.avatar?.key || '',
+        avatarUrl: initialData?.author.avatar?.url || undefined,
+        avatarKey: initialData?.author.avatar?.key || undefined,
         title: initialData?.author.title || 'Author'
       },
       tags: initialData?.tags || [],
@@ -61,7 +85,10 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
     if (trimmedTag && !tags.includes(trimmedTag) && tags.length < 10) {
       const newTags = [...tags, trimmedTag];
       setTags(newTags);
-      form.setValue('tags', newTags);
+      form.setValue('tags', newTags, {
+        shouldValidate: true,
+        shouldDirty: true
+      });
       setTagInput('');
     }
   };
@@ -69,7 +96,10 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
   const removeTag = (tagToRemove: string) => {
     const newTags = tags.filter((tag) => tag !== tagToRemove);
     setTags(newTags);
-    form.setValue('tags', newTags);
+    form.setValue('tags', newTags, {
+      shouldValidate: true,
+      shouldDirty: true
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -79,26 +109,111 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
     }
   };
 
+  // Upload handler for featured image
+  const uploadFeaturedImage = async (file: File) => {
+    setFeaturedImageUpload({ uploading: true });
+
+    try {
+      const response = await blogService.uploadImage(file);
+      const url = response.data?.file?.url || response.data?.url;
+      const key = response.data?.file?.key || response.data?.key;
+
+      if (!url || !key) {
+        throw new Error('Invalid upload response');
+      }
+
+      setFeaturedImageUpload({ uploading: false, url, key });
+      form.setValue('featuredImageUrl', url, { shouldValidate: true });
+      form.setValue('featuredImageKey', key, { shouldValidate: true });
+
+      toast.success('Featured image uploaded successfully');
+    } catch (error: any) {
+      console.error('Featured image upload error:', error);
+      setFeaturedImageUpload({
+        uploading: false,
+        error: error.message || 'Upload failed'
+      });
+      toast.error(error.message || 'Failed to upload featured image');
+    }
+  };
+
+  // Upload handler for author avatar
+  const uploadAuthorAvatar = async (file: File) => {
+    setAvatarUpload({ uploading: true });
+
+    try {
+      const response = await blogService.uploadImage(file);
+      const url = response.data?.file?.url || response.data?.url;
+      const key = response.data?.file?.key || response.data?.key;
+
+      if (!url || !key) {
+        throw new Error('Invalid upload response');
+      }
+
+      setAvatarUpload({ uploading: false, url, key });
+      form.setValue('author.avatarUrl', url, { shouldValidate: true });
+      form.setValue('author.avatarKey', key, { shouldValidate: true });
+
+      toast.success('Author avatar uploaded successfully');
+    } catch (error: any) {
+      console.error('Author avatar upload error:', error);
+      setAvatarUpload({
+        uploading: false,
+        error: error.message || 'Upload failed'
+      });
+      toast.error(error.message || 'Failed to upload author avatar');
+    }
+  };
+
+  // Watch for featured image file changes and auto-upload
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'featuredImage' && value.featuredImage) {
+        const file = Array.isArray(value.featuredImage)
+          ? value.featuredImage[0]
+          : value.featuredImage;
+
+        if (file instanceof File) {
+          uploadFeaturedImage(file);
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form.watch]);
+
+  // Watch for author avatar file changes and auto-upload
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'author.avatar' && value.author?.avatar) {
+        const file = Array.isArray(value.author.avatar)
+          ? value.author.avatar[0]
+          : value.author.avatar;
+
+        if (file instanceof File) {
+          uploadAuthorAvatar(file);
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form.watch]);
+
   const onSubmit = async (data: BlogFormValues) => {
     try {
       setIsSubmitting(true);
 
+      // Use pre-uploaded URLs from state instead of uploading during submission
       const blogData = {
         title: data.title,
         excerpt: data.excerpt,
         content: data.content,
-        featuredImage: data.featuredImage
-          ? (Array.isArray(data.featuredImage) ? data.featuredImage[0] : data.featuredImage)
-          : undefined,
-        featuredImageUrl: data.featuredImageUrl,
-        featuredImageKey: data.featuredImageKey,
+        featuredImageUrl: featuredImageUpload.url || data.featuredImageUrl || undefined,
+        featuredImageKey: featuredImageUpload.key || data.featuredImageKey || undefined,
         author: {
           name: data.author.name,
-          avatar: data.author.avatar
-            ? (Array.isArray(data.author.avatar) ? data.author.avatar[0] : data.author.avatar)
-            : null,
-          avatarUrl: data.author.avatarUrl,
-          avatarKey: data.author.avatarKey,
+          avatarUrl: avatarUpload.url || data.author.avatarUrl || undefined,
+          avatarKey: avatarUpload.key || data.author.avatarKey || undefined,
           title: data.author.title || 'Author'
         },
         tags: data.tags,
@@ -108,16 +223,13 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
       };
 
       if (mode === 'create') {
-        // Validate required files for create mode
-        if (!blogData.featuredImage && !blogData.featuredImageUrl) {
+        // Validate required URLs for create mode
+        if (!blogData.featuredImageUrl) {
           toast.error('Featured image is required');
           return;
         }
 
-        await blogService.createBlog({
-          ...blogData,
-          featuredImage: blogData.featuredImage!
-        });
+        await blogService.createBlog(blogData);
         toast.success('Blog created successfully');
       } else if (initialData) {
         await blogService.updateBlog(initialData._id, blogData);
@@ -141,6 +253,47 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
 
   const handlePublish = async () => {
     form.setValue('status', 'published');
+
+    // Check if files are still uploading
+    if (featuredImageUpload.uploading || avatarUpload.uploading) {
+      toast.error('Please wait for files to finish uploading');
+      return;
+    }
+
+    // Check for upload errors
+    if (featuredImageUpload.error) {
+      toast.error('Featured image upload failed. Please try again.');
+      return;
+    }
+
+    if (avatarUpload.error) {
+      toast.error('Author avatar upload failed. Please try again.');
+      return;
+    }
+
+    // Trigger validation and show errors
+    const isValid = await form.trigger();
+
+    if (!isValid) {
+      // Show which fields are invalid
+      const errors = form.formState.errors;
+      const errorFields = Object.keys(errors).join(', ');
+      toast.error(`Please fix the following fields: ${errorFields}`);
+
+      // Scroll to first error
+      const firstErrorField = Object.keys(errors)[0];
+      const element = document.querySelector(`[name="${firstErrorField}"]`);
+      if (element) {
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }
+
+      return;
+    }
+
+    // If valid, proceed with submission
     form.handleSubmit(onSubmit)();
   };
 
@@ -188,14 +341,22 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
                   </Label>
                   <RichTextEditor
                     value={form.watch('content')}
-                    onChange={(value) => form.setValue('content', value)}
+                    onChange={(value) => {
+                      form.setValue('content', value, {
+                        shouldValidate: true,
+                        shouldDirty: true
+                      });
+                    }}
                     placeholder="Write your blog content here..."
                   />
                   {form.formState.errors.content && (
-                    <p className="text-sm text-destructive">
+                    <p className="text-sm text-destructive font-medium">
                       {form.formState.errors.content.message}
                     </p>
                   )}
+                  <p className="text-xs text-muted-foreground">
+                    Minimum 50 characters required
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -251,7 +412,35 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
                   }}
                   required={mode === 'create'}
                 />
-                {initialData?.featuredImage.url && !form.watch('featuredImage') && (
+
+                {/* Upload progress indicator */}
+                {featuredImageUpload.uploading && (
+                  <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Uploading featured image...</span>
+                  </div>
+                )}
+
+                {/* Upload error */}
+                {featuredImageUpload.error && (
+                  <p className="mt-2 text-sm text-destructive">
+                    {featuredImageUpload.error}
+                  </p>
+                )}
+
+                {/* Show uploaded image preview */}
+                {featuredImageUpload.url && !featuredImageUpload.uploading && (
+                  <div className="mt-3">
+                    <img
+                      src={featuredImageUpload.url}
+                      alt="Featured image preview"
+                      className="w-full rounded-lg"
+                    />
+                  </div>
+                )}
+
+                {/* Show existing image if editing and no new upload */}
+                {initialData?.featuredImage.url && !form.watch('featuredImage') && !featuredImageUpload.url && (
                   <div className="mt-2">
                     <img
                       src={initialData.featuredImage.url}
@@ -293,7 +482,35 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
                     acceptedTypes: ['image/jpeg', 'image/png', 'image/webp']
                   }}
                 />
-                {initialData?.author.avatar?.url && !form.watch('author.avatar') && (
+
+                {/* Upload progress indicator */}
+                {avatarUpload.uploading && (
+                  <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Uploading avatar...</span>
+                  </div>
+                )}
+
+                {/* Upload error */}
+                {avatarUpload.error && (
+                  <p className="mt-2 text-sm text-destructive">
+                    {avatarUpload.error}
+                  </p>
+                )}
+
+                {/* Show uploaded avatar preview */}
+                {avatarUpload.url && !avatarUpload.uploading && (
+                  <div className="mt-3">
+                    <img
+                      src={avatarUpload.url}
+                      alt="Author avatar preview"
+                      className="w-20 h-20 rounded-full object-cover"
+                    />
+                  </div>
+                )}
+
+                {/* Show existing avatar if editing and no new upload */}
+                {initialData?.author.avatar?.url && !form.watch('author.avatar') && !avatarUpload.url && (
                   <div className="mt-2">
                     <img
                       src={initialData.author.avatar.url}
@@ -307,9 +524,11 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
 
             <Card>
               <CardHeader>
-                <CardTitle>Tags</CardTitle>
+                <CardTitle>
+                  Tags <span className="text-destructive">*</span>
+                </CardTitle>
                 <CardDescription>
-                  Add tags to categorize your blog
+                  Add tags to categorize your blog (at least 1 required)
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -318,7 +537,7 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Enter a tag"
+                    placeholder="Enter a tag and press Enter"
                     disabled={tags.length >= 10}
                   />
                   <Button
@@ -348,13 +567,13 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
                 )}
 
                 {form.formState.errors.tags && (
-                  <p className="text-sm text-destructive">
+                  <p className="text-sm text-destructive font-medium">
                     {form.formState.errors.tags.message}
                   </p>
                 )}
 
                 <p className="text-xs text-muted-foreground">
-                  {tags.length}/10 tags added
+                  {tags.length}/10 tags added • At least 1 tag required
                 </p>
               </CardContent>
             </Card>

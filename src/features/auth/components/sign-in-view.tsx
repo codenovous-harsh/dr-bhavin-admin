@@ -18,16 +18,50 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { authService } from '@/services/auth.service';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 export default function SignInViewPage({ stars }: { stars: number }) {
   const router = useRouter();
-  const [email, setEmail] = useState('john.doe@example.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignIn = (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Dummy sign in - just redirect to dashboard
-    router.push('/dashboard/overview');
+
+    // Validation
+    if (!email || !password) {
+      toast.error('Please enter both email and password');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Call actual backend API
+      const response = await authService.login({ email, password });
+
+      // Success!
+      toast.success('Login successful!');
+
+      // Redirect to dashboard
+      router.push('/dashboard/overview');
+      router.refresh();
+    } catch (error: any) {
+      console.error('Login error:', error);
+
+      // Show error message
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Login failed. Please check your credentials.';
+
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -81,6 +115,8 @@ export default function SignInViewPage({ stars }: { stars: number }) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className='focus:border-[#27A48C] focus:ring-[#27A48C]'
+                    disabled={isLoading}
+                    required
                   />
                 </div>
                 <div className='space-y-2'>
@@ -92,16 +128,26 @@ export default function SignInViewPage({ stars }: { stars: number }) {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className='focus:border-[#27A48C] focus:ring-[#27A48C]'
+                    disabled={isLoading}
+                    required
                   />
                 </div>
                 <Button
                   type='submit'
                   className='w-full'
+                  disabled={isLoading}
                   style={{
                     background: `linear-gradient(135deg, #27A48C 0%, #0F3E35 100%)`
                   }}
                 >
-                  Sign In
+                  {isLoading ? (
+                    <>
+                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                      Signing in...
+                    </>
+                  ) : (
+                    'Sign In'
+                  )}
                 </Button>
               </CardContent>
             </form>

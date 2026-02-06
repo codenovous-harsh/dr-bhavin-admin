@@ -1,29 +1,24 @@
 'use client';
 
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Image from '@tiptap/extension-image';
-import Link from '@tiptap/extension-link';
-import Placeholder from '@tiptap/extension-placeholder';
+import { useEffect, useRef, useMemo, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import {
-  Bold,
-  Italic,
-  List,
-  ListOrdered,
-  Heading2,
-  Heading3,
-  Quote,
-  Undo,
-  Redo,
-  Link as LinkIcon,
-  ImageIcon,
-  Code
-} from 'lucide-react';
-import { useCallback, useEffect } from 'react';
-import { blogService } from '@/services/blog.service';
+import 'react-quill-new/dist/quill.snow.css';
+import './rich-text-editor.css';
 import { toast } from 'sonner';
+import { blogService } from '@/services/blog.service';
+
+// Dynamic import to avoid SSR issues with Quill
+const ReactQuill = dynamic(() => import('react-quill-new'), {
+  ssr: false,
+  loading: () => (
+    <div className="border rounded-lg p-4 min-h-[300px] animate-pulse bg-muted/20">
+      <div className="h-8 bg-muted rounded mb-4"></div>
+      <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+      <div className="h-4 bg-muted rounded w-1/2"></div>
+    </div>
+  ),
+});
 
 interface RichTextEditorProps {
   value?: string;
@@ -40,78 +35,23 @@ export function RichTextEditor({
   className,
   editable = true
 }: RichTextEditorProps) {
-  const editor = useEditor({
-    immediatelyRender: false,
-    extensions: [
-      StarterKit.configure({
-        heading: {
-          levels: [2, 3, 4]
-        }
-      }),
-      Image.configure({
-        inline: true,
-        HTMLAttributes: {
-          class: 'rounded-lg max-w-full h-auto'
-        }
-      }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-primary underline',
-          target: '_blank',
-          rel: 'noopener noreferrer'
-        }
-      }),
-      Placeholder.configure({
-        placeholder
-      })
-    ],
-    content: value,
-    editable,
-    onUpdate: ({ editor }) => {
-      const html = editor.getHTML();
-      onChange?.(html);
-    },
-    editorProps: {
-      attributes: {
-        class: cn(
-          'prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none',
-          'dark:prose-invert',
-          'focus:outline-none min-h-[300px] px-4 py-3'
-        )
-      }
-    }
-  });
+  const quillRef = useRef<any>(null);
 
-  // Update editor content when value prop changes
-  useEffect(() => {
-    if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value);
-    }
-  }, [value, editor]);
-
-  const addLink = useCallback(() => {
-    const previousUrl = editor?.getAttributes('link').href;
-    const url = window.prompt('Enter URL:', previousUrl);
-
-    if (url === null) return;
-
-    if (url === '') {
-      editor?.chain().focus().extendMarkRange('link').unsetLink().run();
-      return;
-    }
-
-    editor?.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-  }, [editor]);
-
-  const addImage = useCallback(async () => {
+  // Custom image upload handler
+  const imageHandler = useCallback(() => {
     const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/jpeg,image/png,image/webp,image/gif');
 
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
+    input.onchange = async () => {
+      const file = input.files?.[0];
       if (!file) return;
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file');
+        return;
+      }
 
       // Validate file size (5MB)
       if (file.size > 5 * 1024 * 1024) {
@@ -119,162 +59,121 @@ export function RichTextEditor({
         return;
       }
 
+      // Get Quill editor instance BEFORE upload
+      const quill = quillRef.current?.getEditor();
+      if (!quill) {
+        toast.error('Editor not ready');
+        return;
+      }
+
+      // Save cursor position BEFORE upload
+      const range = quill.getSelection(true);
+      if (!range) {
+        toast.error('Please click in the editor first');
+        return;
+      }
+
       try {
         toast.loading('Uploading image...', { id: 'image-upload' });
 
+        // Upload the image
         const uploadResponse = await blogService.uploadImage(file);
-        const imageUrl = uploadResponse.data.url;
 
-        editor?.chain().focus().setImage({ src: imageUrl }).run();
+        console.log('Full upload response:', uploadResponse);
+
+        // Try to extract URL from various possible response structures
+        let imageUrl = null;
+
+        // Try different response structures
+        if (uploadResponse.data?.file?.url) {
+          imageUrl = uploadResponse.data.file.url;
+          console.log('Using data.file.url:', imageUrl);
+        } else if (uploadResponse.data?.url) {
+          imageUrl = uploadResponse.data.url;
+          console.log('Using data.url:', imageUrl);
+        } else if (uploadResponse.data?.file?.location) {
+          imageUrl = uploadResponse.data.file.location;
+          console.log('Using data.file.location:', imageUrl);
+        }
+
+        // Verify URL is valid
+        if (!imageUrl || typeof imageUrl !== 'string') {
+          console.error('Could not extract URL from response:', uploadResponse);
+          throw new Error('Invalid image URL received from server. Check backend configuration.');
+        }
+
+        // Insert image at the saved cursor position
+        quill.insertEmbed(range.index, 'image', imageUrl, 'user');
+
+        // Move cursor to next line
+        quill.setSelection(range.index + 1, 'silent');
+
+        console.log('Image inserted at index:', range.index);
+        console.log('Image URL:', imageUrl);
 
         toast.success('Image uploaded successfully', { id: 'image-upload' });
-      } catch (error) {
+      } catch (error: any) {
         console.error('Image upload error:', error);
-        toast.error('Failed to upload image', { id: 'image-upload' });
+        toast.error(error?.message || 'Failed to upload image', { id: 'image-upload' });
       }
     };
 
     input.click();
-  }, [editor]);
+  }, []);
 
-  if (!editor) {
-    return null;
-  }
+  // Quill modules configuration
+  const modules = useMemo(
+    () => ({
+      toolbar: {
+        container: [
+          ['bold', 'italic', 'underline'],
+          ['code'],
+          [{ header: [2, 3, false] }],
+          [{ list: 'ordered' }, { list: 'bullet' }],
+          ['blockquote'],
+          ['link', 'image'],
+          ['clean'],
+        ],
+        handlers: {
+          image: imageHandler,
+        },
+      },
+      clipboard: {
+        matchVisual: false,
+      },
+    }),
+    [imageHandler]
+  );
+
+  // Quill formats configuration
+  const formats = [
+    'bold',
+    'italic',
+    'underline',
+    'code',
+    'header',
+    'list',
+    'blockquote',
+    'link',
+    'image',
+  ];
 
   return (
-    <div className={cn('border rounded-lg overflow-hidden', className)}>
-      {editable && (
-        <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleBold().run()}
-            className={cn(editor.isActive('bold') && 'bg-muted')}
-          >
-            <Bold className="h-4 w-4" />
-          </Button>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-            className={cn(editor.isActive('italic') && 'bg-muted')}
-          >
-            <Italic className="h-4 w-4" />
-          </Button>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleCode().run()}
-            className={cn(editor.isActive('code') && 'bg-muted')}
-          >
-            <Code className="h-4 w-4" />
-          </Button>
-
-          <div className="w-px h-6 bg-border mx-1" />
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-            className={cn(editor.isActive('heading', { level: 2 }) && 'bg-muted')}
-          >
-            <Heading2 className="h-4 w-4" />
-          </Button>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-            className={cn(editor.isActive('heading', { level: 3 }) && 'bg-muted')}
-          >
-            <Heading3 className="h-4 w-4" />
-          </Button>
-
-          <div className="w-px h-6 bg-border mx-1" />
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
-            className={cn(editor.isActive('bulletList') && 'bg-muted')}
-          >
-            <List className="h-4 w-4" />
-          </Button>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            className={cn(editor.isActive('orderedList') && 'bg-muted')}
-          >
-            <ListOrdered className="h-4 w-4" />
-          </Button>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleBlockquote().run()}
-            className={cn(editor.isActive('blockquote') && 'bg-muted')}
-          >
-            <Quote className="h-4 w-4" />
-          </Button>
-
-          <div className="w-px h-6 bg-border mx-1" />
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={addLink}
-            className={cn(editor.isActive('link') && 'bg-muted')}
-          >
-            <LinkIcon className="h-4 w-4" />
-          </Button>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={addImage}
-          >
-            <ImageIcon className="h-4 w-4" />
-          </Button>
-
-          <div className="w-px h-6 bg-border mx-1" />
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().undo().run()}
-            disabled={!editor.can().undo()}
-          >
-            <Undo className="h-4 w-4" />
-          </Button>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().redo().run()}
-            disabled={!editor.can().redo()}
-          >
-            <Redo className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
-
-      <EditorContent editor={editor} className="bg-background" />
+    <div className={cn('rich-text-editor-wrapper', className)}>
+      <ReactQuill
+        ref={quillRef}
+        theme="snow"
+        value={value}
+        onChange={onChange}
+        modules={modules}
+        formats={formats}
+        placeholder={placeholder}
+        readOnly={!editable}
+        className={cn(
+          'bg-background',
+          !editable && 'pointer-events-none opacity-70'
+        )}
+      />
     </div>
   );
 }

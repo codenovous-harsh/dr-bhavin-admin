@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { IconTrendingUp } from '@tabler/icons-react';
+import { IconCircleCheck } from '@tabler/icons-react';
 import { Label, Pie, PieChart } from 'recharts';
 
 import {
@@ -18,55 +18,88 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from '@/components/ui/chart';
-
-const chartData = [
-  { browser: 'chrome', visitors: 275, fill: 'var(--primary)' },
-  { browser: 'safari', visitors: 200, fill: 'var(--primary-light)' },
-  { browser: 'firefox', visitors: 287, fill: 'var(--primary-lighter)' },
-  { browser: 'edge', visitors: 173, fill: 'var(--primary-dark)' },
-  { browser: 'other', visitors: 190, fill: 'var(--primary-darker)' }
-];
+import dashboardService from '@/services/dashboard.service';
 
 const chartConfig = {
-  visitors: {
-    label: 'Visitors'
+  value: {
+    label: 'Submissions'
   },
-  chrome: {
-    label: 'Chrome',
-    color: 'var(--primary)'
+  completed: {
+    label: 'Completed',
+    color: 'hsl(142, 76%, 36%)' // green
   },
-  safari: {
-    label: 'Safari',
-    color: 'var(--primary)'
+  pending: {
+    label: 'Pending',
+    color: 'hsl(48, 96%, 53%)' // yellow
   },
-  firefox: {
-    label: 'Firefox',
-    color: 'var(--primary)'
-  },
-  edge: {
-    label: 'Edge',
-    color: 'var(--primary)'
-  },
-  other: {
-    label: 'Other',
-    color: 'var(--primary)'
+  failed: {
+    label: 'Failed',
+    color: 'hsl(0, 84%, 60%)' // red
   }
 } satisfies ChartConfig;
 
 export function PieGraph() {
-  const totalVisitors = React.useMemo(() => {
-    return chartData.reduce((acc, curr) => acc + curr.visitors, 0);
+  const [chartData, setChartData] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await dashboardService.getStatusDistribution();
+        setChartData(data);
+      } catch (error) {
+        console.error('Error fetching status distribution:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
+
+  const totalSubmissions = React.useMemo(() => {
+    return chartData.reduce((acc, curr) => acc + curr.value, 0);
+  }, [chartData]);
+
+  const completedCount = chartData.find((item) => item.name === 'Completed')?.value || 0;
+  const completedPercentage = totalSubmissions > 0
+    ? ((completedCount / totalSubmissions) * 100).toFixed(1)
+    : 0;
+
+  if (loading) {
+    return (
+      <Card className='@container/card animate-pulse'>
+        <CardHeader>
+          <div className='h-6 w-48 bg-gray-200 rounded'></div>
+          <div className='h-4 w-64 bg-gray-200 rounded mt-2'></div>
+        </CardHeader>
+        <CardContent>
+          <div className='h-[250px] bg-gray-200 rounded'></div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (chartData.length === 0) {
+    return (
+      <Card className='@container/card'>
+        <CardHeader>
+          <CardTitle>Submission Status Distribution</CardTitle>
+          <CardDescription>No data available</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   return (
     <Card className='@container/card'>
       <CardHeader>
-        <CardTitle>Pie Chart - Donut with Text</CardTitle>
+        <CardTitle>Status Distribution</CardTitle>
         <CardDescription>
           <span className='hidden @[540px]/card:block'>
-            Total visitors by browser for the last 6 months
+            Analysis submission status breakdown
           </span>
-          <span className='@[540px]/card:hidden'>Browser distribution</span>
+          <span className='@[540px]/card:hidden'>Status breakdown</span>
         </CardDescription>
       </CardHeader>
       <CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
@@ -76,29 +109,27 @@ export function PieGraph() {
         >
           <PieChart>
             <defs>
-              {['chrome', 'safari', 'firefox', 'edge', 'other'].map(
-                (browser, index) => (
-                  <linearGradient
-                    key={browser}
-                    id={`fill${browser}`}
-                    x1='0'
-                    y1='0'
-                    x2='0'
-                    y2='1'
-                  >
-                    <stop
-                      offset='0%'
-                      stopColor='var(--primary)'
-                      stopOpacity={1 - index * 0.15}
-                    />
-                    <stop
-                      offset='100%'
-                      stopColor='var(--primary)'
-                      stopOpacity={0.8 - index * 0.15}
-                    />
-                  </linearGradient>
-                )
-              )}
+              {chartData.map((item, index) => (
+                <linearGradient
+                  key={item.name}
+                  id={`fill${item.name}`}
+                  x1='0'
+                  y1='0'
+                  x2='0'
+                  y2='1'
+                >
+                  <stop
+                    offset='0%'
+                    stopColor={item.fill}
+                    stopOpacity={0.9}
+                  />
+                  <stop
+                    offset='100%'
+                    stopColor={item.fill}
+                    stopOpacity={0.7}
+                  />
+                </linearGradient>
+              ))}
             </defs>
             <ChartTooltip
               cursor={false}
@@ -107,10 +138,10 @@ export function PieGraph() {
             <Pie
               data={chartData.map((item) => ({
                 ...item,
-                fill: `url(#fill${item.browser})`
+                fill: `url(#fill${item.name})`
               }))}
-              dataKey='visitors'
-              nameKey='browser'
+              dataKey='value'
+              nameKey='name'
               innerRadius={60}
               strokeWidth={2}
               stroke='var(--background)'
@@ -130,14 +161,14 @@ export function PieGraph() {
                           y={viewBox.cy}
                           className='fill-foreground text-3xl font-bold'
                         >
-                          {totalVisitors.toLocaleString()}
+                          {totalSubmissions.toLocaleString()}
                         </tspan>
                         <tspan
                           x={viewBox.cx}
                           y={(viewBox.cy || 0) + 24}
                           className='fill-muted-foreground text-sm'
                         >
-                          Total Visitors
+                          Total
                         </tspan>
                       </text>
                     );
@@ -150,12 +181,11 @@ export function PieGraph() {
       </CardContent>
       <CardFooter className='flex-col gap-2 text-sm'>
         <div className='flex items-center gap-2 leading-none font-medium'>
-          Chrome leads with{' '}
-          {((chartData[0].visitors / totalVisitors) * 100).toFixed(1)}%{' '}
-          <IconTrendingUp className='h-4 w-4' />
+          {completedPercentage}% successfully completed{' '}
+          <IconCircleCheck className='h-4 w-4 text-green-600' />
         </div>
         <div className='text-muted-foreground leading-none'>
-          Based on data from January - June 2024
+          Real-time submission status
         </div>
       </CardFooter>
     </Card>

@@ -38,6 +38,7 @@ import type { Blog, BlogStats } from '@/types/blog';
 import { toast } from 'sonner';
 import { Eye, MoreVertical, Star, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import PageContainer from '@/components/layout/page-container';
 
 export default function BlogsPage() {
   const router = useRouter();
@@ -156,19 +157,20 @@ export default function BlogsPage() {
   };
 
   return (
-    <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Blog Management</h2>
-        <div className="flex items-center space-x-2">
-          <Button onClick={() => router.push('/dashboard/blogs/create')}>
-            <Icons.add className="mr-2 h-4 w-4" />
-            New Post
-          </Button>
-        </div>
-      </div>
+    <PageContainer
+      pageTitle="Blog Management"
+      pageDescription="Manage and publish your blog content"
+      pageHeaderAction={
+        <Button onClick={() => router.push('/dashboard/blogs/create')}>
+          <Icons.add className="mr-2 h-4 w-4" />
+          New Post
+        </Button>
+      }
+    >
+      <div className="space-y-4">
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Stats Cards */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
@@ -221,16 +223,12 @@ export default function BlogsPage() {
             </p>
           </CardContent>
         </Card>
-      </div>
+        </div>
 
-      {/* Blog Posts */}
-      <Card>
+        {/* Blog Posts */}
+        <Card>
         <CardHeader>
-          <CardTitle>Blog Posts</CardTitle>
-          <CardDescription>
-            Manage and publish your blog content
-          </CardDescription>
-          <div className="flex items-center gap-4 py-4">
+          <div className="flex items-center gap-4 py-2">
             <Input
               placeholder="Search posts..."
               value={searchTerm}
@@ -395,7 +393,8 @@ export default function BlogsPage() {
             </TabsContent>
           </Tabs>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -418,6 +417,6 @@ export default function BlogsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageContainer>
   );
 }

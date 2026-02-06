@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowLeft, Calendar, Clock, Eye, Edit, Star, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import 'react-quill-new/dist/quill.snow.css';
 
 export default function BlogDetailPage() {
   const router = useRouter();
@@ -223,10 +224,18 @@ export default function BlogDetailPage() {
               <Separator className="my-8" />
 
               {/* Blog Content */}
-              <div
-                className="prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none dark:prose-invert prose-headings:font-bold prose-a:text-primary prose-img:rounded-lg"
-                dangerouslySetInnerHTML={{ __html: blog.content }}
-              />
+              <div className="ql-container ql-snow" style={{ border: 'none' }}>
+                <div
+                  className="ql-editor prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none dark:prose-invert prose-headings:font-bold prose-a:text-primary prose-img:rounded-lg"
+                  style={{
+                    padding: 0,
+                    wordWrap: 'break-word',
+                    overflowWrap: 'break-word',
+                    wordBreak: 'break-word'
+                  }}
+                  dangerouslySetInnerHTML={{ __html: blog.content }}
+                />
+              </div>
 
               {/* SEO Metadata (for admin reference) */}
               {blog.metadata && (blog.metadata.seoTitle || blog.metadata.seoDescription) && (

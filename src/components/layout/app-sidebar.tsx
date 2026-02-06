@@ -33,42 +33,63 @@ import { navItems } from '@/config/nav-config';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useFilteredNavItems } from '@/hooks/use-nav';
 import {
-  IconBell,
   IconChevronRight,
   IconChevronsDown,
-  IconCreditCard,
-  IconLogout,
-  IconUserCircle
+  IconLogout
 } from '@tabler/icons-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import * as React from 'react';
 import { Icons } from '../icons';
 import Image from 'next/image';
-
-// Dummy user and organization data
-const dummyUser = {
-  id: '1',
-  fullName: 'John Doe',
-  firstName: 'John',
-  lastName: 'Doe',
-  emailAddresses: [{ emailAddress: 'john.doe@example.com' }],
-  imageUrl: null
-};
-
-const dummyOrganization = {
-  id: '1',
-  name: 'Bhavin Garara Corp',
-  slug: 'bhavin-garara-corp'
-};
+import { authService } from '@/services/auth.service';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 export default function AppSidebar() {
   const pathname = usePathname();
   const { isOpen } = useMediaQuery();
-  const user = dummyUser; // Using dummy user
-  const organization = dummyOrganization; // Using dummy organization
   const router = useRouter();
   const filteredItems = useFilteredNavItems(navItems);
+  const [user, setUser] = React.useState<any>(null);
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+
+  // Load user from localStorage on mount
+  React.useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        // Format user data to match expected structure
+        setUser({
+          id: userData.id || userData._id,
+          fullName: userData.name || userData.fullName || 'User',
+          firstName: userData.name?.split(' ')[0] || userData.firstName || 'User',
+          lastName: userData.name?.split(' ')[1] || userData.lastName || '',
+          emailAddresses: [{ emailAddress: userData.email }],
+          imageUrl: userData.avatar || userData.imageUrl || null
+        });
+      } catch (error) {
+        console.error('Failed to parse user data:', error);
+        localStorage.removeItem('user');
+      }
+    }
+  }, []);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await authService.logout();
+      toast.success('Logged out successfully');
+      router.push('/auth/sign-in');
+      router.refresh();
+    } catch (error: any) {
+      console.error('Logout error:', error);
+      toast.error(error?.message || 'Failed to logout');
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   React.useEffect(() => {
     // Side effects based on sidebar state changes
@@ -192,31 +213,18 @@ export default function AppSidebar() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-
-                <DropdownMenuGroup>
-                  <DropdownMenuItem
-                    onClick={() => router.push('/dashboard/profile')}
-                  >
-                    <IconUserCircle className='mr-2 h-4 w-4' />
-                    Profile
-                  </DropdownMenuItem>
-                  {organization && (
-                    <DropdownMenuItem
-                      onClick={() => router.push('/dashboard/billing')}
-                    >
-                      <IconCreditCard className='mr-2 h-4 w-4' />
-                      Billing
-                    </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut}>
+                  {isLoggingOut ? (
+                    <>
+                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                      Signing out...
+                    </>
+                  ) : (
+                    <>
+                      <IconLogout className='mr-2 h-4 w-4' />
+                      Sign Out
+                    </>
                   )}
-                  <DropdownMenuItem>
-                    <IconBell className='mr-2 h-4 w-4' />
-                    Notifications
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push('/auth/sign-in')}>
-                  <IconLogout className='mr-2 h-4 w-4' />
-                  Sign Out (Dummy)
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

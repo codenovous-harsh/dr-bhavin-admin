@@ -49,14 +49,14 @@ export const navItems: NavItem[] = [
     shortcut: ['p', 'p'],
     items: []
   },
-  {
-    title: 'Treatments',
-    url: '/dashboard/treatments',
-    icon: 'health',
-    isActive: false,
-    shortcut: ['t', 't'],
-    items: []
-  },
+  // {
+  //   title: 'Treatments',
+  //   url: '/dashboard/treatments',
+  //   icon: 'health',
+  //   isActive: false,
+  //   shortcut: ['t', 't'],
+  //   items: []
+  // },
   {
     title: 'Blogs',
     url: '/dashboard/blogs',
@@ -65,24 +65,24 @@ export const navItems: NavItem[] = [
     shortcut: ['b', 'b'],
     items: []
   },
-  {
-    title: 'Account',
-    url: '#', // Placeholder as there is no direct link for the parent
-    icon: 'account',
-    isActive: false,
-    items: [
-      {
-        title: 'Profile',
-        url: '/dashboard/profile',
-        icon: 'profile',
-        shortcut: ['m', 'm']
-      },
-      {
-        title: 'Settings',
-        url: '/dashboard/settings',
-        icon: 'settings',
-        shortcut: ['s', 's']
-      }
-    ]
-  }
+  // {
+  //   title: 'Account',
+  //   url: '#', // Placeholder as there is no direct link for the parent
+  //   icon: 'account',
+  //   isActive: false,
+  //   items: [
+  //     {
+  //       title: 'Profile',
+  //       url: '/dashboard/profile',
+  //       icon: 'profile',
+  //       shortcut: ['m', 'm']
+  //     },
+  //     {
+  //       title: 'Settings',
+  //       url: '/dashboard/settings',
+  //       icon: 'settings',
+  //       shortcut: ['s', 's']
+  //     }
+  //   ]
+  // }
 ];

@@ -118,17 +118,19 @@ class BlogService {
 
   /**
    * Create a new blog (admin only)
-   * @param blogData - Blog data including files
+   * @param blogData - Blog data with pre-uploaded image URLs
    * @returns Created blog
    */
   async createBlog(blogData: {
     title: string;
     excerpt: string;
     content: string;
-    featuredImage: File;
+    featuredImageUrl: string;
+    featuredImageKey: string;
     author: {
       name: string;
-      avatar?: File | null;
+      avatarUrl?: string;
+      avatarKey?: string;
       title?: string;
     };
     tags: string[];
@@ -140,31 +142,23 @@ class BlogService {
     };
   }): Promise<Blog> {
     try {
-      // Upload featured image
-      const featuredImageUpload = await this.uploadImage(blogData.featuredImage);
-
-      // Upload author avatar if provided
-      let authorAvatar: { url?: string; key?: string } | undefined;
-      if (blogData.author.avatar) {
-        const avatarUpload = await this.uploadImage(blogData.author.avatar);
-        authorAvatar = {
-          url: avatarUpload.data.url,
-          key: avatarUpload.data.key
-        };
-      }
-
-      // Prepare payload
+      // Prepare payload with pre-uploaded URLs
       const payload: CreateBlogPayload = {
         title: blogData.title,
         excerpt: blogData.excerpt,
         content: blogData.content,
         featuredImage: {
-          url: featuredImageUpload.data.url,
-          key: featuredImageUpload.data.key
+          url: blogData.featuredImageUrl,
+          key: blogData.featuredImageKey
         },
         author: {
           name: blogData.author.name,
-          avatar: authorAvatar,
+          avatar: blogData.author.avatarUrl && blogData.author.avatarKey
+            ? {
+                url: blogData.author.avatarUrl,
+                key: blogData.author.avatarKey
+              }
+            : undefined,
           title: blogData.author.title || 'Author'
         },
         tags: blogData.tags,
@@ -184,7 +178,7 @@ class BlogService {
   /**
    * Update a blog (admin only)
    * @param id - Blog ID
-   * @param blogData - Updated blog data
+   * @param blogData - Updated blog data with pre-uploaded URLs
    * @returns Updated blog
    */
   async updateBlog(
@@ -193,12 +187,10 @@ class BlogService {
       title?: string;
       excerpt?: string;
       content?: string;
-      featuredImage?: File;
       featuredImageUrl?: string;
       featuredImageKey?: string;
       author?: {
         name?: string;
-        avatar?: File | null;
         avatarUrl?: string;
         avatarKey?: string;
         title?: string;
@@ -215,34 +207,23 @@ class BlogService {
     try {
       const payload: UpdateBlogPayload = {};
 
-      // Handle featured image update
-      if (blogData.featuredImage) {
-        const featuredImageUpload = await this.uploadImage(blogData.featuredImage);
-        payload.featuredImage = {
-          url: featuredImageUpload.data.url,
-          key: featuredImageUpload.data.key
-        };
-      } else if (blogData.featuredImageUrl && blogData.featuredImageKey) {
+      // Handle featured image update (only if new URLs are provided)
+      if (blogData.featuredImageUrl && blogData.featuredImageKey) {
         payload.featuredImage = {
           url: blogData.featuredImageUrl,
           key: blogData.featuredImageKey
         };
       }
 
-      // Handle author avatar update
+      // Handle author update
       if (blogData.author) {
         payload.author = {
           name: blogData.author.name,
           title: blogData.author.title
         };
 
-        if (blogData.author.avatar) {
-          const avatarUpload = await this.uploadImage(blogData.author.avatar);
-          payload.author.avatar = {
-            url: avatarUpload.data.url,
-            key: avatarUpload.data.key
-          };
-        } else if (blogData.author.avatarUrl && blogData.author.avatarKey) {
+        // Include avatar only if new URLs are provided
+        if (blogData.author.avatarUrl && blogData.author.avatarKey) {
           payload.author.avatar = {
             url: blogData.author.avatarUrl,
             key: blogData.author.avatarKey

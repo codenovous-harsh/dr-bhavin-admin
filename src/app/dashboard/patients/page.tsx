@@ -1,237 +1,180 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
-import { Icons } from '@/components/icons';
-import { useState } from 'react';
-
-// Dummy patient data
-const dummyPatients = [
-  {
-    id: '1',
-    name: 'John Smith',
-    email: 'john.smith@example.com',
-    phone: '+1 234-567-8900',
-    age: 45,
-    status: 'active',
-    lastVisit: '2024-01-15',
-    nextAppointment: '2024-02-01'
-  },
-  {
-    id: '2',
-    name: 'Sarah Johnson',
-    email: 'sarah.j@example.com',
-    phone: '+1 234-567-8901',
-    age: 32,
-    status: 'active',
-    lastVisit: '2024-01-10',
-    nextAppointment: '2024-01-25'
-  },
-  {
-    id: '3',
-    name: 'Michael Brown',
-    email: 'michael.b@example.com',
-    phone: '+1 234-567-8902',
-    age: 58,
-    status: 'inactive',
-    lastVisit: '2023-12-20',
-    nextAppointment: null
-  },
-  {
-    id: '4',
-    name: 'Emma Davis',
-    email: 'emma.d@example.com',
-    phone: '+1 234-567-8903',
-    age: 28,
-    status: 'active',
-    lastVisit: '2024-01-18',
-    nextAppointment: '2024-01-30'
-  },
-  {
-    id: '5',
-    name: 'Robert Wilson',
-    email: 'robert.w@example.com',
-    phone: '+1 234-567-8904',
-    age: 65,
-    status: 'active',
-    lastVisit: '2024-01-12',
-    nextAppointment: '2024-02-05'
-  }
-];
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import skinAnalysisService from '@/services/skinAnalysis.service';
+import PatientStatsCards from '@/features/skinAnalysis/components/patient-stats-cards';
+import PatientsTable from '@/features/skinAnalysis/components/patients-table';
+import type { SkinAnalysis } from '@/types/skinAnalysis';
 
 export default function PatientsPage() {
+  const [analyses, setAnalyses] = useState<SkinAnalysis[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
-  const filteredPatients = dummyPatients.filter(
-    (patient) =>
-      patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const fetchAnalyses = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const options: any = {
+        page: currentPage,
+        limit: 10,
+        sortBy: '-createdAt',
+      };
+
+      if (searchTerm) {
+        options.search = searchTerm;
+      }
+
+      if (statusFilter && statusFilter !== 'all') {
+        options.status = statusFilter;
+      }
+
+      const response = await skinAnalysisService.getAllAnalyses(options);
+      setAnalyses(response.data.analyses);
+      setTotalPages(response.data.pagination.totalPages);
+      setTotalCount(response.data.pagination.totalAnalyses);
+    } catch (err: any) {
+      // Check if it's an authorization error
+      if (err.response?.status === 403) {
+        setError('You do not have permission to access this page. Please contact an administrator.');
+      } else if (err.response?.status === 401) {
+        setError('Your session has expired. Please log in again.');
+      } else {
+        setError(err.response?.data?.message || 'Failed to load patient data');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnalyses();
+  }, [currentPage, statusFilter]);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (currentPage === 1) {
+        fetchAnalyses();
+      } else {
+        setCurrentPage(1);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   return (
-    <div className='flex-1 space-y-4 p-4 pt-6 md:p-8'>
-      <div className='flex items-center justify-between space-y-2'>
-        <h2 className='text-3xl font-bold tracking-tight'>Patients</h2>
-        <div className='flex items-center space-x-2'>
-          <Button>
-            <Icons.add className='mr-2 h-4 w-4' />
-            Add Patient
-          </Button>
-        </div>
+    <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
+      <div className="flex items-center justify-between space-y-2">
+        <h2 className="text-3xl font-bold tracking-tight">
+          Skin Analysis Patients
+        </h2>
       </div>
 
       {/* Stats Cards */}
-      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              Total Patients
-            </CardTitle>
-            <Icons.users className='text-muted-foreground h-4 w-4' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>1,234</div>
-            <p className='text-muted-foreground text-xs'>
-              +20% from last month
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              Active Patients
-            </CardTitle>
-            <Icons.user className='text-muted-foreground h-4 w-4' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>956</div>
-            <p className='text-muted-foreground text-xs'>
-              +15% from last month
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              New This Month
-            </CardTitle>
-            <Icons.add className='text-muted-foreground h-4 w-4' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>89</div>
-            <p className='text-muted-foreground text-xs'>
-              +12% from last month
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              Appointments Today
-            </CardTitle>
-            <Icons.dashboard className='text-muted-foreground h-4 w-4' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>24</div>
-            <p className='text-muted-foreground text-xs'>
-              8 morning, 16 afternoon
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <PatientStatsCards />
 
       {/* Patients Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Patient List</CardTitle>
+          <CardTitle>Patient Submissions</CardTitle>
           <CardDescription>
-            Manage your patients and view their information
+            View and manage all skin analysis submissions
           </CardDescription>
-          <div className='flex items-center py-4'>
+          <div className="flex flex-col gap-4 py-4 sm:flex-row">
             <Input
-              placeholder='Search patients...'
+              placeholder="Search by name or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className='max-w-sm'
+              className="max-w-sm"
             />
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="processing">Processing</SelectItem>
+                <SelectItem value="failed">Failed</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Age</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last Visit</TableHead>
-                <TableHead>Next Appointment</TableHead>
-                <TableHead className='text-right'>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredPatients.map((patient) => (
-                <TableRow key={patient.id}>
-                  <TableCell className='font-medium'>{patient.name}</TableCell>
-                  <TableCell>{patient.email}</TableCell>
-                  <TableCell>{patient.phone}</TableCell>
-                  <TableCell>{patient.age}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        patient.status === 'active' ? 'default' : 'secondary'
-                      }
+          {error ? (
+            <div className="rounded-md border border-red-200 bg-red-50 p-4">
+              <p className="text-sm text-red-600">{error}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchAnalyses}
+                className="mt-2"
+              >
+                Retry
+              </Button>
+            </div>
+          ) : (
+            <>
+              <PatientsTable analyses={analyses} loading={loading} />
+
+              {/* Pagination */}
+              {!loading && totalPages > 1 && (
+                <div className="flex items-center justify-between px-2 py-4">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {analyses.length} of {totalCount} submissions
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
                     >
-                      {patient.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{patient.lastVisit}</TableCell>
-                  <TableCell>{patient.nextAppointment || '-'}</TableCell>
-                  <TableCell className='text-right'>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant='ghost' className='h-8 w-8 p-0'>
-                          <span className='sr-only'>Open menu</span>
-                          <Icons.ellipsis className='h-4 w-4' />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align='end'>
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>View Details</DropdownMenuItem>
-                        <DropdownMenuItem>Edit Patient</DropdownMenuItem>
-                        <DropdownMenuItem>Book Appointment</DropdownMenuItem>
-                        <DropdownMenuItem>View History</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                      Previous
+                    </Button>
+                    <div className="text-sm">
+                      Page {currentPage} of {totalPages}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
     </div>
