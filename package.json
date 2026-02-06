@@ -8,9 +8,9 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "preview": "wrangler pages dev .next",
-    "deploy": "wrangler pages deploy .next",
+    "build": "opennextjs-cloudflare build",
+    "preview": "wrangler dev",
+    "deploy": "wrangler deploy",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "eslint src --fix && bun format",
@@ -105,6 +105,7 @@
   "devDependencies": {
     "@cloudflare/next-on-pages": "^1.13.5",
     "@faker-js/faker": "^9.3.0",
+    "@opennextjs/cloudflare": "^1.16.3",
     "@types/node": "22.10.2",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.2",
