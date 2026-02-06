@@ -115,8 +115,8 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
 
     try {
       const response = await blogService.uploadImage(file);
-      const url = response.data?.file?.url || response.data?.url;
-      const key = response.data?.file?.key || response.data?.key;
+      const url = response.data?.url;
+      const key = response.data?.key;
 
       if (!url || !key) {
         throw new Error('Invalid upload response');
@@ -143,8 +143,8 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
 
     try {
       const response = await blogService.uploadImage(file);
-      const url = response.data?.file?.url || response.data?.url;
-      const key = response.data?.file?.key || response.data?.key;
+      const url = response.data?.url;
+      const key = response.data?.key;
 
       if (!url || !key) {
         throw new Error('Invalid upload response');
@@ -224,12 +224,17 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
 
       if (mode === 'create') {
         // Validate required URLs for create mode
-        if (!blogData.featuredImageUrl) {
+        if (!blogData.featuredImageUrl || !blogData.featuredImageKey) {
           toast.error('Featured image is required');
           return;
         }
 
-        await blogService.createBlog(blogData);
+        // Type assertion after validation - we know these are defined
+        await blogService.createBlog({
+          ...blogData,
+          featuredImageUrl: blogData.featuredImageUrl,
+          featuredImageKey: blogData.featuredImageKey
+        });
         toast.success('Blog created successfully');
       } else if (initialData) {
         await blogService.updateBlog(initialData._id, blogData);

@@ -216,7 +216,7 @@ class BlogService {
       }
 
       // Handle author update
-      if (blogData.author) {
+      if (blogData.author && blogData.author.name) {
         payload.author = {
           name: blogData.author.name,
           title: blogData.author.title

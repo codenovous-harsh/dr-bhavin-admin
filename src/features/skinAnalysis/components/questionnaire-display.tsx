@@ -84,7 +84,7 @@ export default function QuestionnaireDisplay({
           {sections.map((section) => {
             const hasData =
               section.data && Array.isArray(section.data) && section.data.length > 0;
-            const responseCount = hasData ? section.data.length : 0;
+            const responseCount = hasData ? (section.data?.length ?? 0) : 0;
 
             return (
               <AccordionItem key={section.key} value={section.key}>
@@ -108,7 +108,7 @@ export default function QuestionnaireDisplay({
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  {hasData ? (
+                  {hasData && section.data ? (
                     <ul className="space-y-2 pl-11">
                       {section.data.map((item, index) => (
                         <li

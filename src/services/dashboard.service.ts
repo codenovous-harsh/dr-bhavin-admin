@@ -32,8 +32,7 @@ class DashboardService {
       // Try to fetch blog stats (optional - may fail if endpoint doesn't exist yet)
       let blogStats: any = {};
       try {
-        const blogStatsResponse = await blogService.getBlogStats();
-        blogStats = blogStatsResponse.data || {};
+        blogStats = await blogService.getBlogStats();
       } catch (blogError) {
         console.warn('Blog stats not available:', blogError);
         // Use default values
@@ -135,8 +134,7 @@ class DashboardService {
    */
   async getBlogPerformance() {
     try {
-      const response = await blogService.getBlogStats();
-      const stats = response.data || {};
+      const stats = await blogService.getBlogStats();
 
       return {
         published: stats.publishedBlogs || 0,
