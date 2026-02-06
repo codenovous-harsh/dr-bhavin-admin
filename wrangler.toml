@@ -2,10 +2,7 @@ name = "bhavin-garara-frontend"
 compatibility_date = "2026-02-06"
 compatibility_flags = ["nodejs_compat"]
 
-# Cloudflare Pages configuration
-pages_build_output_dir = ".next"
-
-# Static assets
+# Static assets for Pages deployment
 [assets]
 directory = ".next/static"
 binding = "STATIC_ASSETS"
