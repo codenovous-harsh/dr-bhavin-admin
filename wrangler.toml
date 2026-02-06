@@ -1,12 +1,2 @@
 name = "bhavin-garara-frontend"
 compatibility_date = "2026-02-06"
-compatibility_flags = ["nodejs_compat", "experimental"]
-
-# Pages configuration for Next.js
-pages_build_output_dir = ".next"
-
-#:schema node_modules/wrangler/config-schema.json
-assets = { directory = ".next/static", binding = "ASSETS" }
-
-[build]
-command = "npm run build"
