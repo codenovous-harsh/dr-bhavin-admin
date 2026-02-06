@@ -2,7 +2,6 @@ name = "bhavin-garara-frontend"
 compatibility_date = "2026-02-06"
 compatibility_flags = ["nodejs_compat"]
 
-# Static assets for Pages deployment
+# Static assets deployment
 [assets]
 directory = ".next/static"
-binding = "STATIC_ASSETS"
