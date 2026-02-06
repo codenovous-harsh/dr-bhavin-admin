@@ -1,48 +1,74 @@
 # Deploying to Cloudflare Pages
 
-This Next.js application requires special configuration to deploy to Cloudflare Pages.
+This Next.js application uses `@cloudflare/next-on-pages` to deploy to Cloudflare Pages.
 
-## Option 1: Automatic Cloudflare Pages Deployment (Recommended)
+## Cloudflare Pages Dashboard Configuration
 
-1. Go to Cloudflare Pages dashboard
-2. Connect your Git repository
-3. Use these build settings:
-   - **Framework preset**: Next.js
-   - **Build command**: `npm run build && npx @cloudflare/next-on-pages`
-   - **Build output directory**: `.vercel/output/static`
-   - **Environment variables**: Add your environment variables from `.env.local`
+### Build Settings
 
-4. Deploy!
+Go to your Cloudflare Pages project settings and configure:
 
-## Option 2: Manual Deployment via CLI
+- **Framework preset**: Next.js
+- **Build command**: `npm run build`
+- **Build output directory**: `.vercel/output/static`
+- **Deploy command**: `wrangler pages deploy .vercel/output/static`
+- **Node.js version**: 22.22.0 (automatically detected from `.node-version`)
+
+### Environment Variables
+
+Add these environment variables in Cloudflare Pages settings:
+- `NEXT_PUBLIC_API_URL` - Your backend API URL
+- `NODE_VERSION` - 22.22.0
+- Any other environment variables from your `.env.local`
+
+## Manual Deployment via CLI
 
 1. Install dependencies:
    ```bash
    bun install
    ```
 
-2. Build the application:
+2. Build for Cloudflare Pages:
    ```bash
    npm run build
-   npx @cloudflare/next-on-pages
    ```
+   This runs both `next build` and `@cloudflare/next-on-pages`
 
-3. Deploy to Cloudflare Pages:
+3. Deploy:
+   ```bash
+   npm run deploy
+   ```
+   Or manually:
    ```bash
    wrangler pages deploy .vercel/output/static --project-name=bhavin-garara-frontend
    ```
 
+## How It Works
+
+1. `next build` creates the standard Next.js build in `.next/`
+2. `@cloudflare/next-on-pages` transforms it into Cloudflare-compatible format in `.vercel/output/static/`
+3. Wrangler deploys the static output to Cloudflare Pages
+
 ## Important Notes
 
-- This project uses `@cloudflare/next-on-pages` to adapt Next.js for Cloudflare's edge runtime
-- The output directory is `.vercel/output/static`
-- Make sure to set all required environment variables in Cloudflare Pages settings
-- Node.js compatibility mode is enabled for features that need it
+- ✅ Uses `@cloudflare/next-on-pages` for Next.js 16 compatibility
+- ✅ Node.js compatibility enabled for server-side features
+- ✅ Supports middleware, API routes, and server components
+- ⚠️ Make sure to run both build steps (handled automatically by `npm run build`)
+- ⚠️ Deploy command must be `wrangler pages deploy` NOT `wrangler deploy`
 
 ## Troubleshooting
 
-If deployment fails:
-1. Check that `@cloudflare/next-on-pages` is installed
-2. Verify the build output exists in `.vercel/output/static`
-3. Check Cloudflare Pages logs for specific errors
-4. Ensure Node.js compatibility is enabled in wrangler.toml
+### Error: "It looks like you've run a Workers-specific command"
+- Solution: Use `wrangler pages deploy` instead of `wrangler deploy`
+- Update the deploy command in Cloudflare Pages dashboard
+
+### Build fails with module errors
+- Ensure `@cloudflare/next-on-pages` is in devDependencies
+- Run `bun install` to install it
+- Check that `.vercel/output/static` exists after build
+
+### Runtime errors on Cloudflare
+- Check that `nodejs_compat` is enabled in wrangler.toml
+- Verify all environment variables are set in Cloudflare dashboard
+- Review Cloudflare Pages logs for specific errors

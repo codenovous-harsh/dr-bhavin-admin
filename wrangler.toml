@@ -1,6 +1,16 @@
 name = "bhavin-garara-frontend"
+main = ".vercel/output/static/_worker.js"
 compatibility_date = "2026-02-06"
-pages_build_output_dir = ".vercel/output/static"
-
-# Node.js compatibility for Next.js features
 compatibility_flags = ["nodejs_compat"]
+
+# Assets configuration for static files
+[site]
+bucket = ".vercel/output/static"
+
+# Build configuration
+[build]
+command = "npm run build"
+
+# Environment variables
+[vars]
+NODE_ENV = "production"
