@@ -22,13 +22,15 @@ export default async function DashboardLayout({
   const defaultOpen = cookieStore.get('sidebar_state')?.value === 'true';
   return (
     <KBar>
-      <SidebarProvider defaultOpen={defaultOpen}>
+      <SidebarProvider defaultOpen={defaultOpen} suppressHydrationWarning>
         <InfobarProvider defaultOpen={false}>
           <AppSidebar />
-          <SidebarInset>
+          <SidebarInset className="overflow-hidden">
             <Header />
             {/* page main content */}
-            {children}
+            <div className="flex-1 overflow-y-auto">
+              {children}
+            </div>
             {/* page main content ends */}
           </SidebarInset>
           <InfoSidebar side='right' />

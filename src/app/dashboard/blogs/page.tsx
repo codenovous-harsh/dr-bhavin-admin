@@ -17,171 +17,207 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 import { Icons } from '@/components/icons';
-import { useState } from 'react';
-
-// Dummy blog data
-const dummyBlogs = [
-  {
-    id: '1',
-    title: '10 Tips for Better Oral Health',
-    excerpt:
-      'Discover the essential habits that can help you maintain excellent oral health throughout your life...',
-    author: 'Dr. Sarah Johnson',
-    date: '2024-01-18',
-    category: 'Oral Health',
-    status: 'published',
-    views: 1234,
-    image: 'https://via.placeholder.com/400x200'
-  },
-  {
-    id: '2',
-    title: 'Understanding Root Canal Treatment',
-    excerpt:
-      'Learn everything you need to know about root canal procedures, from preparation to recovery...',
-    author: 'Dr. Michael Chen',
-    date: '2024-01-15',
-    category: 'Procedures',
-    status: 'published',
-    views: 856,
-    image: 'https://via.placeholder.com/400x200'
-  },
-  {
-    id: '3',
-    title: 'The Future of Cosmetic Dentistry',
-    excerpt:
-      'Explore the latest innovations and trends shaping the future of cosmetic dental treatments...',
-    author: 'Dr. Emily Brown',
-    date: '2024-01-12',
-    category: 'Cosmetic',
-    status: 'draft',
-    views: 0,
-    image: 'https://via.placeholder.com/400x200'
-  },
-  {
-    id: '4',
-    title: "Dental Care for Children: A Parent's Guide",
-    excerpt:
-      'Essential tips and advice for parents to ensure their children develop healthy dental habits...',
-    author: 'Dr. Robert Wilson',
-    date: '2024-01-10',
-    category: 'Pediatric',
-    status: 'published',
-    views: 2103,
-    image: 'https://via.placeholder.com/400x200'
-  },
-  {
-    id: '5',
-    title: 'Teeth Whitening: Myths vs Facts',
-    excerpt:
-      'Separating fact from fiction when it comes to professional and at-home teeth whitening...',
-    author: 'Dr. Lisa Anderson',
-    date: '2024-01-08',
-    category: 'Cosmetic',
-    status: 'published',
-    views: 1567,
-    image: 'https://via.placeholder.com/400x200'
-  },
-  {
-    id: '6',
-    title: 'Managing Dental Anxiety',
-    excerpt:
-      'Practical strategies to help patients overcome their fear of dental visits...',
-    author: 'Dr. James Taylor',
-    date: '2024-01-05',
-    category: 'Patient Care',
-    status: 'review',
-    views: 0,
-    image: 'https://via.placeholder.com/400x200'
-  }
-];
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { blogService } from '@/services/blog.service';
+import type { Blog, BlogStats } from '@/types/blog';
+import { toast } from 'sonner';
+import { Eye, MoreVertical, Star, Loader2 } from 'lucide-react';
+import { format } from 'date-fns';
 
 export default function BlogsPage() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'published' | 'draft' | 'featured'>('all');
+  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [stats, setStats] = useState<BlogStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [blogToDelete, setBlogToDelete] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const filteredBlogs = dummyBlogs.filter((blog) => {
+  useEffect(() => {
+    fetchBlogs();
+    fetchStats();
+  }, [activeTab]);
+
+  const fetchBlogs = async () => {
+    try {
+      setLoading(true);
+      const filters: any = {
+        limit: 50,
+        sortBy: '-publishedAt'
+      };
+
+      if (activeTab === 'published') filters.status = 'published';
+      if (activeTab === 'draft') filters.status = 'draft';
+      if (activeTab === 'featured') filters.isFeatured = true;
+
+      const response = await blogService.getBlogs(filters);
+      setBlogs(response.data.blogs);
+    } catch (error: any) {
+      console.error('Failed to fetch blogs:', error);
+      toast.error('Failed to load blogs');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const statsData = await blogService.getBlogStats();
+      setStats(statsData);
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
+  const filteredBlogs = blogs.filter((blog) => {
     const matchesSearch =
       blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       blog.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      blog.author.toLowerCase().includes(searchTerm.toLowerCase());
+      blog.author.name.toLowerCase().includes(searchTerm.toLowerCase());
 
-    if (activeTab === 'all') return matchesSearch;
-    return matchesSearch && blog.status === activeTab;
+    return matchesSearch;
   });
 
-  const stats = {
-    total: dummyBlogs.length,
-    published: dummyBlogs.filter((b) => b.status === 'published').length,
-    draft: dummyBlogs.filter((b) => b.status === 'draft').length,
-    totalViews: dummyBlogs.reduce((acc, blog) => acc + blog.views, 0)
+  const handleDelete = async () => {
+    if (!blogToDelete) return;
+
+    try {
+      setActionLoading(blogToDelete);
+      await blogService.deleteBlog(blogToDelete);
+      toast.success('Blog deleted successfully');
+      fetchBlogs();
+      fetchStats();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete blog');
+    } finally {
+      setActionLoading(null);
+      setDeleteDialogOpen(false);
+      setBlogToDelete(null);
+    }
+  };
+
+  const handleTogglePublish = async (blog: Blog) => {
+    try {
+      setActionLoading(blog._id);
+      if (blog.status === 'published') {
+        await blogService.unpublishBlog(blog._id);
+        toast.success('Blog unpublished successfully');
+      } else {
+        await blogService.publishBlog(blog._id);
+        toast.success('Blog published successfully');
+      }
+      fetchBlogs();
+      fetchStats();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update blog status');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleToggleFeatured = async (blog: Blog) => {
+    try {
+      setActionLoading(blog._id);
+      await blogService.toggleFeatured(blog._id);
+      toast.success(
+        blog.isFeatured
+          ? 'Blog removed from featured'
+          : 'Blog marked as featured'
+      );
+      fetchBlogs();
+      fetchStats();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update featured status');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const openDeleteDialog = (blogId: string) => {
+    setBlogToDelete(blogId);
+    setDeleteDialogOpen(true);
   };
 
   return (
-    <div className='flex-1 space-y-4 p-4 pt-6 md:p-8'>
-      <div className='flex items-center justify-between space-y-2'>
-        <h2 className='text-3xl font-bold tracking-tight'>Blog Management</h2>
-        <div className='flex items-center space-x-2'>
-          <Button>
-            <Icons.add className='mr-2 h-4 w-4' />
+    <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
+      <div className="flex items-center justify-between space-y-2">
+        <h2 className="text-3xl font-bold tracking-tight">Blog Management</h2>
+        <div className="flex items-center space-x-2">
+          <Button onClick={() => router.push('/dashboard/blogs/create')}>
+            <Icons.add className="mr-2 h-4 w-4" />
             New Post
           </Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Total Posts</CardTitle>
-            <Icons.blog className='text-muted-foreground h-4 w-4' />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
+            <Icons.blog className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>{stats.total}</div>
-            <p className='text-muted-foreground text-xs'>
-              {stats.published} published
+            <div className="text-2xl font-bold">{stats?.totalBlogs || 0}</div>
+            <p className="text-muted-foreground text-xs">
+              {stats?.publishedBlogs || 0} published
             </p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Total Views</CardTitle>
-            <Icons.user className='text-muted-foreground h-4 w-4' />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Views</CardTitle>
+            <Eye className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>
-              {stats.totalViews.toLocaleString()}
+            <div className="text-2xl font-bold">
+              {stats?.totalViews.toLocaleString() || 0}
             </div>
-            <p className='text-muted-foreground text-xs'>
-              +23% from last month
+            <p className="text-muted-foreground text-xs">
+              Across all published posts
             </p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Draft Posts</CardTitle>
-            <Icons.post className='text-muted-foreground h-4 w-4' />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Draft Posts</CardTitle>
+            <Icons.post className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>{stats.draft}</div>
-            <p className='text-muted-foreground text-xs'>
+            <div className="text-2xl font-bold">{stats?.draftBlogs || 0}</div>
+            <p className="text-muted-foreground text-xs">
               Awaiting publication
             </p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              Engagement Rate
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Featured Posts
             </CardTitle>
-            <Icons.dashboard className='text-muted-foreground h-4 w-4' />
+            <Star className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>4.2%</div>
-            <p className='text-muted-foreground text-xs'>
-              +1.2% from last week
+            <div className="text-2xl font-bold">{stats?.featuredBlogs || 0}</div>
+            <p className="text-muted-foreground text-xs">
+              Highlighted on homepage
             </p>
           </CardContent>
         </Card>
@@ -192,101 +228,196 @@ export default function BlogsPage() {
         <CardHeader>
           <CardTitle>Blog Posts</CardTitle>
           <CardDescription>
-            Manage and publish your dental health blog content
+            Manage and publish your blog content
           </CardDescription>
-          <div className='flex items-center gap-4 py-4'>
+          <div className="flex items-center gap-4 py-4">
             <Input
-              placeholder='Search posts...'
+              placeholder="Search posts..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className='max-w-sm'
+              className="max-w-sm"
             />
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className='mb-4'>
-              <TabsTrigger value='all'>All Posts</TabsTrigger>
-              <TabsTrigger value='published'>Published</TabsTrigger>
-              <TabsTrigger value='draft'>Drafts</TabsTrigger>
-              <TabsTrigger value='review'>In Review</TabsTrigger>
+          <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="all">All Posts</TabsTrigger>
+              <TabsTrigger value="published">Published</TabsTrigger>
+              <TabsTrigger value="draft">Drafts</TabsTrigger>
+              <TabsTrigger value="featured">Featured</TabsTrigger>
             </TabsList>
-            <TabsContent value={activeTab} className='space-y-4'>
-              <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
-                {filteredBlogs.map((blog) => (
-                  <Card key={blog.id} className='overflow-hidden'>
-                    <img
-                      src={blog.image}
-                      alt={blog.title}
-                      className='h-48 w-full object-cover'
-                    />
-                    <CardHeader>
-                      <div className='mb-2 flex items-center justify-between'>
-                        <Badge
-                          variant={
-                            blog.status === 'published'
-                              ? 'default'
-                              : 'secondary'
-                          }
-                        >
-                          {blog.status}
-                        </Badge>
-                        <Badge variant='outline'>{blog.category}</Badge>
-                      </div>
-                      <CardTitle className='line-clamp-2'>
-                        {blog.title}
-                      </CardTitle>
-                      <CardDescription className='line-clamp-2'>
-                        {blog.excerpt}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className='text-muted-foreground flex items-center justify-between text-sm'>
-                        <span>{blog.author}</span>
-                        <span>{blog.date}</span>
-                      </div>
-                      {blog.status === 'published' && (
-                        <div className='text-muted-foreground mt-2 text-sm'>
-                          {blog.views.toLocaleString()} views
+            <TabsContent value={activeTab} className="space-y-4">
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : filteredBlogs.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">
+                    {searchTerm ? 'No blogs found matching your search.' : 'No blogs yet. Create your first post!'}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {filteredBlogs.map((blog) => (
+                    <Card key={blog._id} className="overflow-hidden relative">
+                      {actionLoading === blog._id && (
+                        <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10">
+                          <Loader2 className="h-6 w-6 animate-spin" />
                         </div>
                       )}
-                    </CardContent>
-                    <CardFooter>
-                      <div className='flex w-full items-center justify-between'>
-                        <Button variant='outline' size='sm'>
-                          Edit
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant='ghost' className='h-8 w-8 p-0'>
-                              <span className='sr-only'>Open menu</span>
-                              <Icons.ellipsis className='h-4 w-4' />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align='end'>
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>View Post</DropdownMenuItem>
-                            <DropdownMenuItem>Edit Post</DropdownMenuItem>
-                            <DropdownMenuItem>
-                              {blog.status === 'published'
-                                ? 'Unpublish'
-                                : 'Publish'}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>View Analytics</DropdownMenuItem>
-                            <DropdownMenuItem className='text-red-600'>
-                              Delete Post
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
+                      <img
+                        src={blog.featuredImage.url}
+                        alt={blog.title}
+                        className="h-48 w-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => router.push(`/dashboard/blogs/${blog.slug}`)}
+                      />
+                      <CardHeader>
+                        <div className="mb-2 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              variant={
+                                blog.status === 'published'
+                                  ? 'default'
+                                  : 'secondary'
+                              }
+                            >
+                              {blog.status}
+                            </Badge>
+                            {blog.isFeatured && (
+                              <Badge variant="outline" className="gap-1">
+                                <Star className="h-3 w-3 fill-current" />
+                                Featured
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <CardTitle className="line-clamp-2 cursor-pointer hover:text-primary transition-colors"
+                          onClick={() => router.push(`/dashboard/blogs/${blog.slug}`)}>
+                          {blog.title}
+                        </CardTitle>
+                        <CardDescription className="line-clamp-2">
+                          {blog.excerpt}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-muted-foreground flex items-center justify-between text-sm">
+                          <span>{blog.author.name}</span>
+                          <span>
+                            {blog.publishedAt
+                              ? format(new Date(blog.publishedAt), 'MMM dd, yyyy')
+                              : format(new Date(blog.createdAt), 'MMM dd, yyyy')}
+                          </span>
+                        </div>
+                        {blog.status === 'published' && (
+                          <div className="text-muted-foreground mt-2 flex items-center gap-4 text-sm">
+                            <span className="flex items-center gap-1">
+                              <Eye className="h-3 w-3" />
+                              {blog.views.toLocaleString()} views
+                            </span>
+                            <span>{blog.readTime} min read</span>
+                          </div>
+                        )}
+                        {blog.tags.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {blog.tags.slice(0, 3).map((tag) => (
+                              <Badge key={tag} variant="outline" className="text-xs">
+                                {tag}
+                              </Badge>
+                            ))}
+                            {blog.tags.length > 3 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{blog.tags.length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                      <CardFooter>
+                        <div className="flex w-full items-center justify-between">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => router.push(`/dashboard/blogs/edit/${blog._id}`)}
+                          >
+                            Edit
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem
+                                onClick={() => router.push(`/dashboard/blogs/${blog.slug}`)}
+                              >
+                                View Post
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => router.push(`/dashboard/blogs/edit/${blog._id}`)}
+                              >
+                                Edit Post
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => handleTogglePublish(blog)}
+                              >
+                                {blog.status === 'published'
+                                  ? 'Unpublish'
+                                  : 'Publish'}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleToggleFeatured(blog)}
+                              >
+                                {blog.isFeatured
+                                  ? 'Remove from Featured'
+                                  : 'Mark as Featured'}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-red-600 focus:text-red-600"
+                                onClick={() => openDeleteDialog(blog._id)}
+                              >
+                                Delete Post
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the blog
+              post and remove all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
