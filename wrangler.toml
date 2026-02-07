@@ -1,3 +1,12 @@
 name = "bhavin-garara-frontend"
 compatibility_date = "2026-02-06"
 compatibility_flags = ["nodejs_compat"]
+
+# Build configuration
+[build]
+command = "npm run pages:build"
+
+# R2 bucket binding for incremental cache
+[[r2_buckets]]
+binding = "NEXT_CACHE_WORKERS_KV"
+bucket_name = "bhavin-garara-cache"
