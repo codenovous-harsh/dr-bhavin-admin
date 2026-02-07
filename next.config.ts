@@ -1,10 +1,7 @@
 import type { NextConfig } from 'next';
 
-// Configuration for Cloudflare Pages deployment
+// Configuration for Cloudflare Pages with OpenNext
 const nextConfig: NextConfig = {
-  // Use standalone output for Cloudflare Pages
-  output: 'standalone',
-
   images: {
     remotePatterns: [
       {
@@ -23,7 +20,7 @@ const nextConfig: NextConfig = {
         port: ''
       }
     ],
-    // Disable optimization for Cloudflare Pages
+    // Disable optimization for Cloudflare
     unoptimized: true,
   },
 
