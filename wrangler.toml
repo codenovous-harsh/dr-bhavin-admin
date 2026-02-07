@@ -2,9 +2,5 @@ name = "dr-bhavin-admin"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
-# Main worker file
-main = ".open-next/worker.js"
-
-# Assets configuration
-[site]
-bucket = ".open-next/assets"
+# Pages configuration
+pages_build_output_dir = ".open-next/assets"
