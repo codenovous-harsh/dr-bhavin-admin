@@ -30,19 +30,8 @@ const nextConfig: NextConfig = {
   turbopack: {},
 
   experimental: {
-    optimizePackageImports: [
-      '@radix-ui/react-icons',
-      'lucide-react',
-      '@radix-ui/react-dropdown-menu',
-      '@radix-ui/react-select',
-      '@radix-ui/react-dialog',
-      '@radix-ui/react-popover',
-      '@radix-ui/react-tooltip',
-    ],
+    optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
   },
-
-  // Production-only optimizations
-  productionBrowserSourceMaps: false,
 };
 
 export default nextConfig;

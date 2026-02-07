@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { IconCircleCheck } from '@tabler/icons-react';
+import { Label, Pie, PieChart } from 'recharts';
 
 import {
   Card,
@@ -11,6 +12,12 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent
+} from '@/components/ui/chart';
 import dashboardService from '@/services/dashboard.service';
 
 const chartConfig = {
@@ -29,7 +36,7 @@ const chartConfig = {
     label: 'Failed',
     color: 'hsl(0, 84%, 60%)' // red
   }
-};
+} satisfies ChartConfig;
 
 export function PieGraph() {
   const [chartData, setChartData] = React.useState<any[]>([]);
@@ -95,34 +102,90 @@ export function PieGraph() {
           <span className='@[540px]/card:hidden'>Status breakdown</span>
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className='h-[250px] w-full flex items-center justify-center bg-muted/20 rounded-lg'>
-          <div className='text-center space-y-4'>
-            <div className='grid grid-cols-1 gap-3 max-w-xs mx-auto'>
-              {chartData.map((item) => (
-                <div key={item.name} className='flex items-center justify-between p-3 bg-background rounded-lg border'>
-                  <div className='text-sm font-medium'>{item.name}</div>
-                  <div className='flex items-center gap-2'>
-                    <div className='text-lg font-bold'>{item.value}</div>
-                    <div className='text-sm text-muted-foreground'>
-                      ({((item.value / totalSubmissions) * 100).toFixed(0)}%)
-                    </div>
-                  </div>
-                </div>
+      <CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
+        <ChartContainer
+          config={chartConfig}
+          className='mx-auto aspect-square h-[250px]'
+        >
+          <PieChart>
+            <defs>
+              {chartData.map((item, index) => (
+                <linearGradient
+                  key={item.name}
+                  id={`fill${item.name}`}
+                  x1='0'
+                  y1='0'
+                  x2='0'
+                  y2='1'
+                >
+                  <stop
+                    offset='0%'
+                    stopColor={item.fill}
+                    stopOpacity={0.9}
+                  />
+                  <stop
+                    offset='100%'
+                    stopColor={item.fill}
+                    stopOpacity={0.7}
+                  />
+                </linearGradient>
               ))}
-            </div>
-            <p className='text-xs text-muted-foreground mt-4'>
-              Chart visualization temporarily disabled for bundle size optimization
-            </p>
-          </div>
-        </div>
+            </defs>
+            <ChartTooltip
+              cursor={false}
+              content={<ChartTooltipContent hideLabel />}
+            />
+            <Pie
+              data={chartData.map((item) => ({
+                ...item,
+                fill: `url(#fill${item.name})`
+              }))}
+              dataKey='value'
+              nameKey='name'
+              innerRadius={60}
+              strokeWidth={2}
+              stroke='var(--background)'
+            >
+              <Label
+                content={({ viewBox }) => {
+                  if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
+                    return (
+                      <text
+                        x={viewBox.cx}
+                        y={viewBox.cy}
+                        textAnchor='middle'
+                        dominantBaseline='middle'
+                      >
+                        <tspan
+                          x={viewBox.cx}
+                          y={viewBox.cy}
+                          className='fill-foreground text-3xl font-bold'
+                        >
+                          {totalSubmissions.toLocaleString()}
+                        </tspan>
+                        <tspan
+                          x={viewBox.cx}
+                          y={(viewBox.cy || 0) + 24}
+                          className='fill-muted-foreground text-sm'
+                        >
+                          Total
+                        </tspan>
+                      </text>
+                    );
+                  }
+                }}
+              />
+            </Pie>
+          </PieChart>
+        </ChartContainer>
       </CardContent>
       <CardFooter className='flex-col gap-2 text-sm'>
-        <div className='flex items-center gap-2 font-medium leading-none'>
-          Completed: {completedPercentage}% <IconCircleCheck className='h-4 w-4' />
+        <div className='flex items-center gap-2 leading-none font-medium'>
+          {completedPercentage}% successfully completed{' '}
+          <IconCircleCheck className='h-4 w-4 text-green-600' />
         </div>
-        <div className='leading-none text-muted-foreground'>
-          Total submissions: {totalSubmissions}
+        <div className='text-muted-foreground leading-none'>
+          Real-time submission status
         </div>
       </CardFooter>
     </Card>
