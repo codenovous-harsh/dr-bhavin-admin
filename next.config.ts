@@ -24,6 +24,11 @@ const baseConfig: NextConfig = {
   transpilePackages: ['geist'],
   // Turbopack configuration for Next.js 16+
   turbopack: {},
+  experimental: {
+    // Disable OG image generation to reduce bundle size for Cloudflare Workers
+    optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
+    serverComponentsExternalPackages: ['@vercel/og', 'sharp'],
+  },
 };
 
 // Sentry disabled for Cloudflare Workers build to reduce bundle size
