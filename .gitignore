@@ -49,3 +49,4 @@ next-env.d.ts
 .env.sentry-build-plugin
 
 .open-next/
+package-lock.json
