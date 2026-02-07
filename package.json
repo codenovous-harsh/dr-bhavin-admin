@@ -9,7 +9,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "pages:build": "opennextjs-cloudflare build",
+    "pages:build": "opennextjs-cloudflare build && npm run copy-worker",
+    "copy-worker": "cp -r .open-next/cloudflare .open-next/assets/_worker && cp .open-next/worker.js .open-next/assets/_worker.js && cp -r .open-next/server-functions .open-next/assets/ && cp -r .open-next/middleware .open-next/assets/ && cp -r .open-next/.build .open-next/assets/",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "eslint src --fix && bun format",
