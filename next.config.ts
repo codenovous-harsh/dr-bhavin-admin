@@ -22,16 +22,8 @@ const baseConfig: NextConfig = {
     ]
   },
   transpilePackages: ['geist'],
-  webpack: (config: any, { isServer }: { isServer: boolean }) => {
-    // Fix for Cloudflare Workers - exclude ws module
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        ws: false,
-      };
-    }
-    return config;
-  },
+  // Turbopack configuration for Next.js 16+
+  turbopack: {},
 };
 
 // Sentry disabled for Cloudflare Workers build to reduce bundle size
