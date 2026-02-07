@@ -23,7 +23,7 @@ const baseConfig: NextConfig = {
     ]
   },
   transpilePackages: ['geist'],
-  webpack: (config, { isServer }) => {
+  webpack: (config: any, { isServer }: { isServer: boolean }) => {
     // Fix for Cloudflare Workers - exclude ws module
     if (!isServer) {
       config.resolve.fallback = {
