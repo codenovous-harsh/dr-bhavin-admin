@@ -22,7 +22,17 @@ const baseConfig: NextConfig = {
       }
     ]
   },
-  transpilePackages: ['geist']
+  transpilePackages: ['geist'],
+  webpack: (config, { isServer }) => {
+    // Fix for Cloudflare Workers - exclude ws module
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        ws: false,
+      };
+    }
+    return config;
+  },
 };
 
 let configWithPlugins = baseConfig;
