@@ -2,6 +2,9 @@ import type { NextConfig } from 'next';
 
 // Configuration for Cloudflare Pages deployment
 const nextConfig: NextConfig = {
+  // Use standalone output for Cloudflare Pages
+  output: 'standalone',
+
   images: {
     remotePatterns: [
       {
