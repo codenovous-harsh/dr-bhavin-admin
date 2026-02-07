@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 import {
   Card,
@@ -10,20 +9,7 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent
-} from '@/components/ui/chart';
 import dashboardService from '@/services/dashboard.service';
-
-const chartConfig = {
-  count: {
-    label: 'Count',
-    color: 'hsl(var(--chart-1))'
-  }
-} satisfies ChartConfig;
 
 export function BarGraph() {
   const [chartData, setChartData] = React.useState<any[]>([]);
@@ -98,65 +84,21 @@ export function BarGraph() {
         </CardDescription>
       </CardHeader>
       <CardContent className='px-2 sm:px-6'>
-        <ChartContainer config={chartConfig} className='h-[300px] w-full'>
-          <BarChart
-            accessibilityLayer
-            data={chartData}
-            margin={{
-              top: 20,
-              right: 20,
-              bottom: 20,
-              left: 20
-            }}
-          >
-            <defs>
+        <div className='h-[300px] w-full flex items-center justify-center bg-muted/20 rounded-lg'>
+          <div className='text-center space-y-4'>
+            <div className='grid grid-cols-3 gap-4 max-w-md mx-auto'>
               {chartData.map((item) => (
-                <linearGradient
-                  key={item.category}
-                  id={`fill${item.category}`}
-                  x1='0'
-                  y1='0'
-                  x2='0'
-                  y2='1'
-                >
-                  <stop offset='0%' stopColor={item.fill} stopOpacity={0.9} />
-                  <stop offset='100%' stopColor={item.fill} stopOpacity={0.6} />
-                </linearGradient>
+                <div key={item.category} className='p-4 bg-background rounded-lg border'>
+                  <div className='text-2xl font-bold'>{item.count}</div>
+                  <div className='text-sm text-muted-foreground'>{item.category}</div>
+                </div>
               ))}
-            </defs>
-            <CartesianGrid vertical={false} strokeDasharray='3 3' opacity={0.3} />
-            <XAxis
-              dataKey='category'
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-              tick={{ fontSize: 12 }}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              tick={{ fontSize: 12 }}
-              tickFormatter={(value) => value.toLocaleString()}
-            />
-            <ChartTooltip
-              cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
-              content={<ChartTooltipContent hideLabel />}
-            />
-            <Bar
-              dataKey='count'
-              radius={[8, 8, 0, 0]}
-              fill='url(#fillPublished)'
-            >
-              {chartData.map((entry, index) => (
-                <Bar
-                  key={`bar-${index}`}
-                  dataKey='count'
-                  fill={`url(#fill${entry.category})`}
-                />
-              ))}
-            </Bar>
-          </BarChart>
-        </ChartContainer>
+            </div>
+            <p className='text-sm text-muted-foreground'>
+              Chart visualization temporarily disabled for bundle size optimization
+            </p>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

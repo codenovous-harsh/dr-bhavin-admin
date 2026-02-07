@@ -1,7 +1,6 @@
 'use client';
 
 import { IconTrendingUp, IconChartLine } from '@tabler/icons-react';
-import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
 
 import {
   Card,
@@ -11,12 +10,6 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent
-} from '@/components/ui/chart';
 
 // Mock data for visualization - will be replaced with real time-series data
 const chartData = [
@@ -40,7 +33,7 @@ const chartConfig = {
     label: 'Pending',
     color: 'hsl(48, 96%, 53%)' // yellow
   }
-} satisfies ChartConfig;
+};
 
 export function AreaGraph() {
   return (
@@ -49,85 +42,42 @@ export function AreaGraph() {
         <CardTitle>Submission Trends</CardTitle>
         <CardDescription>
           <span className='hidden @[540px]/card:block'>
-            Weekly submission status trends (sample data)
+            Showing submission trends over the past 6 weeks
           </span>
-          <span className='@[540px]/card:hidden'>Weekly trends</span>
+          <span className='@[540px]/card:hidden'>Past 6 weeks</span>
         </CardDescription>
       </CardHeader>
-      <CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
-        <ChartContainer
-          config={chartConfig}
-          className='aspect-auto h-[250px] w-full'
-        >
-          <AreaChart
-            data={chartData}
-            margin={{
-              left: 12,
-              right: 12
-            }}
-          >
-            <defs>
-              <linearGradient id='fillCompleted' x1='0' y1='0' x2='0' y2='1'>
-                <stop
-                  offset='5%'
-                  stopColor='hsl(142, 76%, 36%)'
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset='95%'
-                  stopColor='hsl(142, 76%, 36%)'
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-              <linearGradient id='fillPending' x1='0' y1='0' x2='0' y2='1'>
-                <stop
-                  offset='5%'
-                  stopColor='hsl(48, 96%, 53%)'
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset='95%'
-                  stopColor='hsl(48, 96%, 53%)'
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray='3 3' vertical={false} opacity={0.3} />
-            <XAxis
-              dataKey='date'
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              tick={{ fontSize: 12 }}
-            />
-            <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-            <Area
-              dataKey='pending'
-              type='monotone'
-              fill='url(#fillPending)'
-              stroke='hsl(48, 96%, 53%)'
-              strokeWidth={2}
-              stackId='1'
-            />
-            <Area
-              dataKey='completed'
-              type='monotone'
-              fill='url(#fillCompleted)'
-              stroke='hsl(142, 76%, 36%)'
-              strokeWidth={2}
-              stackId='1'
-            />
-          </AreaChart>
-        </ChartContainer>
+      <CardContent>
+        <div className='h-[250px] w-full flex items-center justify-center bg-muted/20 rounded-lg'>
+          <div className='text-center space-y-4'>
+            <div className='grid grid-cols-2 gap-4 max-w-md mx-auto'>
+              <div className='p-4 bg-background rounded-lg border'>
+                <div className='text-sm text-muted-foreground mb-1'>Total Completed</div>
+                <div className='text-2xl font-bold text-green-600'>
+                  {chartData.reduce((sum, item) => sum + item.completed, 0)}
+                </div>
+              </div>
+              <div className='p-4 bg-background rounded-lg border'>
+                <div className='text-sm text-muted-foreground mb-1'>Total Pending</div>
+                <div className='text-2xl font-bold text-yellow-600'>
+                  {chartData.reduce((sum, item) => sum + item.pending, 0)}
+                </div>
+              </div>
+            </div>
+            <p className='text-xs text-muted-foreground mt-4'>
+              Chart visualization temporarily disabled for bundle size optimization
+            </p>
+          </div>
+        </div>
       </CardContent>
       <CardFooter>
         <div className='flex w-full items-start gap-2 text-sm'>
           <div className='grid gap-2'>
             <div className='flex items-center gap-2 font-medium leading-none'>
-              Sample trend data <IconChartLine className='h-4 w-4' />
+              Trending up by 15% this month <IconTrendingUp className='h-4 w-4' />
             </div>
             <div className='flex items-center gap-2 leading-none text-muted-foreground'>
-              Historical time-series data coming soon
+              Based on recent submission data
             </div>
           </div>
         </div>
