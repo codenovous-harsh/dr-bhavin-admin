@@ -18,6 +18,21 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'clerk.com',
         port: ''
+      },
+      {
+        protocol: 'https',
+        hostname: '*.r2.dev',
+        port: ''
+      },
+      {
+        protocol: 'https',
+        hostname: 'pub-52cbdbc329ee4722947acc85ef683c6a.r2.dev',
+        port: ''
+      },
+      {
+        protocol: 'https',
+        hostname: '*.r2.cloudflarestorage.com',
+        port: ''
       }
     ],
     // Disable optimization for Cloudflare

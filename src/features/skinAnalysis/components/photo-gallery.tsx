@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import Image from 'next/image';
+import { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import type { SkinAnalysisPhoto } from '@/types/skinAnalysis';
@@ -72,26 +71,12 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {photos.map((photo, index) => (
-              <div
+              <ThumbnailTile
                 key={photo.key}
-                className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 cursor-pointer hover:border-blue-500 transition-colors group"
+                photo={photo}
+                index={index}
                 onClick={() => openPhoto(photo, index)}
-              >
-                <Image
-                  src={photo.url}
-                  alt={`Photo ${index + 1}`}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform"
-                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center">
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="bg-white rounded-full p-2">
-                      <Icons.search className="h-5 w-5 text-gray-700" />
-                    </div>
-                  </div>
-                </div>
-              </div>
+              />
             ))}
           </div>
         </CardContent>
@@ -103,13 +88,11 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
           {selectedPhoto && (
             <div className="space-y-4">
               <div className="relative aspect-video w-full bg-gray-100 rounded-lg overflow-hidden">
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={selectedPhoto.url}
                   alt={`Photo ${currentIndex + 1}`}
-                  fill
-                  className="object-contain"
-                  sizes="(max-width: 1024px) 100vw, 80vw"
-                  priority
+                  className="absolute inset-0 w-full h-full object-contain"
                 />
               </div>
 
@@ -148,5 +131,77 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+function ThumbnailTile({
+  photo,
+  index,
+  onClick,
+}: {
+  photo: SkinAnalysisPhoto;
+  index: number;
+  onClick: () => void;
+}) {
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
+  const [info, setInfo] = useState<string>('');
+
+  useEffect(() => {
+    const el = imgRef.current;
+    if (!el) return;
+    if (el.complete && el.naturalWidth > 0) {
+      setStatus('loaded');
+      setInfo(`${el.naturalWidth}x${el.naturalHeight}`);
+    }
+  }, [photo.url]);
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-100 cursor-pointer hover:border-blue-500 transition-colors group"
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        ref={imgRef}
+        src={photo.url}
+        alt={`Photo ${index + 1}`}
+        width={480}
+        height={640}
+        className="absolute inset-0 w-full h-full object-cover"
+        onLoad={(e) => {
+          const t = e.currentTarget;
+          setStatus('loaded');
+          setInfo(`${t.naturalWidth}x${t.naturalHeight}`);
+        }}
+        onError={() => {
+          setStatus('error');
+          setInfo('error');
+        }}
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-center bg-cover"
+        style={{ backgroundImage: `url("${photo.url}")` }}
+      />
+      <div className="absolute top-1 left-1 z-10 px-1.5 py-0.5 rounded bg-black/70 text-[10px] text-white pointer-events-none">
+        {status === 'loaded' ? `OK ${info}` : status === 'error' ? 'ERR' : 'LOAD…'}
+      </div>
+      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center pointer-events-none">
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="bg-white rounded-full p-2">
+            <Icons.search className="h-5 w-5 text-gray-700" />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

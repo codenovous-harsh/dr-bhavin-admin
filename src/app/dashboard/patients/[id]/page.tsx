@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,10 +13,11 @@ import AnalysisResultsDisplay from '@/features/skinAnalysis/components/analysis-
 import type { SkinAnalysis } from '@/types/skinAnalysis';
 
 interface PatientDetailPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default function PatientDetailPage({ params }: PatientDetailPageProps) {
+  const { id } = use(params);
   const router = useRouter();
   const [analysis, setAnalysis] = useState<SkinAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,7 +26,7 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
   useEffect(() => {
     const fetchAnalysis = async () => {
       try {
-        const data = await skinAnalysisService.getAnalysisById(params.id);
+        const data = await skinAnalysisService.getAnalysisById(id);
         setAnalysis(data);
       } catch (err: any) {
         // Check if it's an authorization error
@@ -42,7 +43,7 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
     };
 
     fetchAnalysis();
-  }, [params.id]);
+  }, [id]);
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: any; label: string }> = {
