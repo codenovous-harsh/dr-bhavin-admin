@@ -49,6 +49,14 @@ export const navItems: NavItem[] = [
     shortcut: ['p', 'p'],
     items: []
   },
+  {
+    title: 'AI Prompts',
+    url: '/dashboard/prompts',
+    icon: 'settings',
+    isActive: false,
+    shortcut: ['a', 'i'],
+    items: []
+  },
   // {
   //   title: 'Treatments',
   //   url: '/dashboard/treatments',
