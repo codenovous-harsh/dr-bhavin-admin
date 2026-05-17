@@ -58,7 +58,11 @@ export default function UserAuthForm() {
     try {
       const response = await authService.login(data);
       toast.success(response.message || 'Signed in successfully!');
-      router.push(callbackUrl);
+      const role = response.data?.user?.role;
+      const isDefaultCallback = callbackUrl === '/dashboard' || callbackUrl === '/dashboard/overview';
+      const destination =
+        role === 'editor' && isDefaultCallback ? '/dashboard/blogs' : callbackUrl;
+      router.push(destination);
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign in');
     } finally {

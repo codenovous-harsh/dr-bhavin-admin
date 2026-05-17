@@ -1,61 +1,56 @@
 'use client';
 
 /**
- * Client-side hook for filtering navigation items
+ * Client-side hook for filtering navigation items by user role.
  *
- * This is a dummy implementation without authentication.
- * All navigation items are visible to all users.
+ * Reads the authenticated user from localStorage (set by AuthService on login)
+ * and filters nav items whose `access.role` does not match.
+ *
+ * Role hierarchy: superadmin > admin > editor > user
+ * - access.role === 'superadmin' → only superadmin
+ * - access.role === 'admin' → admin and superadmin
+ * - access.role === 'editor' → editor, admin, and superadmin
+ * - no access.role → visible to everyone authenticated
  */
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { NavItem } from '@/types';
 
-// Dummy user and organization data
-const dummyUser = {
-  id: '1',
-  fullName: 'John Doe',
-  firstName: 'John',
-  lastName: 'Doe',
-  emailAddresses: [{ emailAddress: 'john.doe@example.com' }],
-  imageUrl: null
+const ROLE_RANK: Record<string, number> = {
+  user: 0,
+  editor: 1,
+  admin: 2,
+  superadmin: 3,
 };
 
-const dummyOrganization = {
-  id: '1',
-  name: 'Bhavin Garara Corp',
-  slug: 'bhavin-garara-corp'
-};
+function rolePermits(userRole: string | undefined, requiredRole: string | undefined): boolean {
+  if (!requiredRole) return true;
+  if (!userRole) return false;
+  return (ROLE_RANK[userRole] ?? 0) >= (ROLE_RANK[requiredRole] ?? 99);
+}
 
-const dummyMembership = {
-  role: 'admin',
-  permissions: ['*'] // All permissions for dummy admin
-};
-
-/**
- * Hook to filter navigation items (dummy implementation)
- *
- * @param items - Array of navigation items to filter
- * @returns All items (no filtering in dummy mode)
- */
 export function useFilteredNavItems(items: NavItem[]) {
-  // Dummy context with all permissions
-  const accessContext = useMemo(() => {
-    return {
-      organization: dummyOrganization,
-      user: dummyUser,
-      permissions: dummyMembership.permissions,
-      role: dummyMembership.role,
-      hasOrg: true
-    };
+  const [userRole, setUserRole] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem('user');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setUserRole(parsed?.role);
+      }
+    } catch {
+      // ignore
+    }
   }, []);
 
-  // Return all items without filtering (dummy mode)
   const filteredItems = useMemo(() => {
-    return items.map((item) => ({
-      ...item,
-      items: item.items // Keep all sub-items as well
-    }));
-  }, [items]);
+    return items.filter((item) => {
+      const required = (item.access as any)?.role as string | undefined;
+      return rolePermits(userRole, required);
+    });
+  }, [items, userRole]);
 
   return filteredItems;
 }

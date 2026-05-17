@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import {
 } from '@/components/ui/table';
 import type { SkinAnalysis } from '@/types/skinAnalysis';
 import { Icons } from '@/components/icons';
+import SendEmailDialog from './send-email-dialog';
 
 interface PatientsTableProps {
   analyses: SkinAnalysis[];
@@ -24,6 +26,7 @@ export default function PatientsTable({
   loading = false,
 }: PatientsTableProps) {
   const router = useRouter();
+  const [emailTarget, setEmailTarget] = useState<SkinAnalysis | null>(null);
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: any; label: string }> = {
@@ -135,18 +138,37 @@ export default function PatientsTable({
               <TableCell>{getStatusBadge(analysis.status)}</TableCell>
               <TableCell>{formatDate(analysis.createdAt)}</TableCell>
               <TableCell className="text-right">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => router.push(`/dashboard/patients/${analysis._id}`)}
-                >
-                  View Details
-                </Button>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEmailTarget(analysis)}
+                  >
+                    Email
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push(`/dashboard/patients/${analysis._id}`)}
+                  >
+                    View Details
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+      {emailTarget && (
+        <SendEmailDialog
+          open={!!emailTarget}
+          onOpenChange={(open) => !open && setEmailTarget(null)}
+          analysisId={emailTarget._id}
+          patientName={`${emailTarget.firstName} ${emailTarget.lastName}`}
+          patientEmail={emailTarget.email}
+          emailHistory={(emailTarget as any).emailHistory || []}
+        />
+      )}
     </div>
   );
 }

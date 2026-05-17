@@ -106,6 +106,17 @@ class SkinAnalysisService {
   }
 
   /**
+   * Send a manual email to the patient for a specific analysis (Admin only)
+   */
+  async sendPatientEmail(
+    id: string,
+    payload: { subject: string; message: string }
+  ): Promise<{ status: string; message: string; data: { emailHistory: any[] } }> {
+    const response = await api.post(`${SKIN_ANALYSIS_API_URL}/${id}/email`, payload);
+    return response.data;
+  }
+
+  /**
    * Get analysis statistics (Admin only)
    * @returns Analysis statistics
    */

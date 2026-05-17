@@ -10,6 +10,7 @@ import skinAnalysisService from '@/services/skinAnalysis.service';
 import QuestionnaireDisplay from '@/features/skinAnalysis/components/questionnaire-display';
 import PhotoGallery from '@/features/skinAnalysis/components/photo-gallery';
 import AnalysisResultsDisplay from '@/features/skinAnalysis/components/analysis-results-display';
+import SendEmailDialog from '@/features/skinAnalysis/components/send-email-dialog';
 import type { SkinAnalysis } from '@/types/skinAnalysis';
 
 interface PatientDetailPageProps {
@@ -22,6 +23,7 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
   const [analysis, setAnalysis] = useState<SkinAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [emailOpen, setEmailOpen] = useState(false);
 
   useEffect(() => {
     const fetchAnalysis = async () => {
@@ -141,9 +143,24 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setEmailOpen(true)}>
+            Email patient
+          </Button>
           {getStatusBadge(analysis.status)}
         </div>
       </div>
+
+      <SendEmailDialog
+        open={emailOpen}
+        onOpenChange={setEmailOpen}
+        analysisId={analysis._id}
+        patientName={`${analysis.firstName} ${analysis.lastName}`}
+        patientEmail={analysis.email}
+        emailHistory={(analysis as any).emailHistory || []}
+        onSent={(history) =>
+          setAnalysis((prev) => (prev ? ({ ...prev, emailHistory: history } as any) : prev))
+        }
+      />
 
       {/* Patient Information */}
       <Card>
