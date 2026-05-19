@@ -287,6 +287,25 @@ class BlogService {
     const response = await api.patch<BlogResponse>(`${BLOG_API_URL}/${id}/featured`);
     return response.data.data;
   }
+
+  /**
+   * Send a published blog to a list of recipients (editor/admin/superadmin)
+   */
+  async sendBlogEmail(
+    id: string,
+    payload: {
+      contactIds?: string[];
+      extraEmails?: string;
+      includeAllContacts?: boolean;
+    }
+  ): Promise<{
+    status: string;
+    message: string;
+    data: { total: number; success: number; failure: number; errors: { email: string; error: string }[] };
+  }> {
+    const response = await api.post(`${BLOG_API_URL}/${id}/send-email`, payload);
+    return response.data;
+  }
 }
 
 export const blogService = new BlogService();

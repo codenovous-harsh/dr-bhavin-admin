@@ -49,6 +49,15 @@ export const navItems: NavItem[] = [
     access: { role: 'editor' },
   },
   {
+    title: 'Contacts',
+    url: '/dashboard/contacts',
+    icon: 'users',
+    isActive: false,
+    shortcut: ['c', 'c'],
+    items: [],
+    access: { role: 'editor' },
+  },
+  {
     title: 'User Management',
     url: '/dashboard/users',
     icon: 'user',

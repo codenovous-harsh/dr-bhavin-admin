@@ -39,6 +39,7 @@ import { toast } from 'sonner';
 import { Eye, MoreVertical, Star, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import PageContainer from '@/components/layout/page-container';
+import SendBlogEmailDialog from '@/features/blogs/components/send-blog-email-dialog';
 
 export default function BlogsPage() {
   const router = useRouter();
@@ -50,6 +51,7 @@ export default function BlogsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [blogToDelete, setBlogToDelete] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [emailBlog, setEmailBlog] = useState<Blog | null>(null);
 
   useEffect(() => {
     fetchBlogs();
@@ -375,6 +377,11 @@ export default function BlogsPage() {
                                   ? 'Remove from Featured'
                                   : 'Mark as Featured'}
                               </DropdownMenuItem>
+                              {blog.status === 'published' && (
+                                <DropdownMenuItem onClick={() => setEmailBlog(blog)}>
+                                  Email this blog…
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 className="text-red-600 focus:text-red-600"
@@ -395,6 +402,15 @@ export default function BlogsPage() {
         </CardContent>
         </Card>
       </div>
+
+      {emailBlog && (
+        <SendBlogEmailDialog
+          open={!!emailBlog}
+          onOpenChange={(open) => !open && setEmailBlog(null)}
+          blogId={emailBlog._id}
+          blogTitle={emailBlog.title}
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
