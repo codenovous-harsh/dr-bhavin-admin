@@ -216,3 +216,27 @@
 .dark .text-yellow-600 { color: oklch(0.8 0.16 90); }
 .dark .text-green-500,
 .dark .text-green-600 { color: oklch(0.75 0.16 150); }
+.dark .bg-green-50 { background-color: oklch(0.25 0.05 150); }
+.dark .text-green-700,
+.dark .text-green-800 { color: oklch(0.85 0.14 150); }
+
+/*
+ * Native form elements (input, textarea, select) inherit a system-painted
+ * background in some browsers that ignores .bg-white remapping. Force
+ * dark-mode form elements to use the theme tokens so any element without an
+ * explicit Tailwind background class is still legible in dark mode.
+ *
+ * Components that opt-in to a specific colour (e.g. shadcn Input which sets
+ * its own bg) win via Tailwind's higher specificity.
+ */
+.dark input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']),
+.dark textarea,
+.dark select {
+  background-color: var(--card);
+  color: var(--card-foreground);
+  border-color: var(--border);
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: oklch(0.6 0 0);
+}

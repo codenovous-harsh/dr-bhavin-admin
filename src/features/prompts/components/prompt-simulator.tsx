@@ -51,10 +51,13 @@ export function PromptSimulator({ draftSystemPrompt, draftUserPromptTemplate, on
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="flex h-[90vh] w-full max-w-6xl flex-col rounded bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b p-4">
+      <div className="flex h-[90vh] w-full max-w-6xl flex-col rounded bg-card text-card-foreground shadow-xl border border-border">
+        <div className="flex items-center justify-between border-b border-border p-4">
           <h2 className="text-lg font-semibold">Simulate Prompt</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <button
+            onClick={onClose}
+            className="text-muted-foreground hover:text-foreground"
+          >
             ✕
           </button>
         </div>
@@ -64,7 +67,7 @@ export function PromptSimulator({ draftSystemPrompt, draftUserPromptTemplate, on
 
           {step === 'compare' && patient && (
             <div className="space-y-4">
-              <div className="rounded bg-gray-50 p-3 text-sm">
+              <div className="rounded bg-muted p-3 text-sm text-foreground">
                 <div className="font-medium">
                   {patient.firstName} {patient.lastName}, {patient.age}, {patient.gender}, {patient.ethnicity}
                 </div>
@@ -85,13 +88,17 @@ export function PromptSimulator({ draftSystemPrompt, draftUserPromptTemplate, on
                     setResult(null);
                     setError(null);
                   }}
-                  className="mt-2 text-xs text-blue-600 hover:underline"
+                  className="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:underline"
                 >
                   Pick a different patient
                 </button>
               </div>
 
-              {error && <div className="rounded bg-red-50 p-3 text-sm text-red-800">{error}</div>}
+              {error && (
+                <div className="rounded bg-red-50 dark:bg-red-950/50 p-3 text-sm text-red-800 dark:text-red-200">
+                  {error}
+                </div>
+              )}
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <SimulationResultColumn

@@ -25,9 +25,9 @@ const VARIABLE_HINTS = [
 ];
 
 const statusBadge: Record<string, string> = {
-  draft: 'bg-amber-100 text-amber-800',
-  published: 'bg-green-100 text-green-800',
-  archived: 'bg-gray-100 text-gray-700',
+  draft: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200',
+  published: 'bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-200',
+  archived: 'bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300',
 };
 
 export function PromptEditor({ id }: { id: string }) {
@@ -144,49 +144,49 @@ export function PromptEditor({ id }: { id: string }) {
         </div>
       </div>
 
-      {error && <div className="mb-3 rounded bg-red-50 p-3 text-sm text-red-800">{error}</div>}
-      {info && <div className="mb-3 rounded bg-green-50 p-3 text-sm text-green-800">{info}</div>}
+      {error && <div className="mb-3 rounded bg-red-50 dark:bg-red-950/50 p-3 text-sm text-red-800 dark:text-red-200">{error}</div>}
+      {info && <div className="mb-3 rounded bg-green-50 dark:bg-green-950/50 p-3 text-sm text-green-800 dark:text-green-200">{info}</div>}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium">Notes</label>
+            <label className="mb-1 block text-sm font-medium text-foreground">Notes</label>
             <input
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               disabled={!isDraft}
-              className="w-full rounded border px-3 py-2 text-sm disabled:bg-gray-50"
+              className="w-full rounded border border-input bg-background text-foreground px-3 py-2 text-sm placeholder:text-muted-foreground disabled:bg-muted disabled:text-muted-foreground"
               placeholder="What changed in this version?"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">System Prompt</label>
+            <label className="mb-1 block text-sm font-medium text-foreground">System Prompt</label>
             <textarea
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
               disabled={!isDraft}
               rows={10}
-              className="w-full rounded border px-3 py-2 font-mono text-xs disabled:bg-gray-50"
+              className="w-full rounded border border-input bg-background text-foreground px-3 py-2 font-mono text-xs placeholder:text-muted-foreground disabled:bg-muted disabled:text-muted-foreground"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">User Prompt Template</label>
+            <label className="mb-1 block text-sm font-medium text-foreground">User Prompt Template</label>
             <textarea
               id="user-prompt-template"
               value={userPromptTemplate}
               onChange={(e) => setUserPromptTemplate(e.target.value)}
               disabled={!isDraft}
               rows={25}
-              className="w-full rounded border px-3 py-2 font-mono text-xs disabled:bg-gray-50"
+              className="w-full rounded border border-input bg-background text-foreground px-3 py-2 font-mono text-xs placeholder:text-muted-foreground disabled:bg-muted disabled:text-muted-foreground"
             />
           </div>
         </div>
 
-        <aside className="rounded border p-3 text-sm">
+        <aside className="rounded border border-border bg-card text-card-foreground p-3 text-sm">
           <h3 className="mb-2 font-medium">Available variables</h3>
-          <p className="mb-3 text-xs text-gray-500">
+          <p className="mb-3 text-xs text-muted-foreground">
             Click to insert into the user template at cursor.
           </p>
           <div className="flex flex-wrap gap-1">
@@ -195,7 +195,7 @@ export function PromptEditor({ id }: { id: string }) {
                 key={v}
                 onClick={() => isDraft && insertVariable(v)}
                 disabled={!isDraft}
-                className="rounded bg-gray-100 px-2 py-1 font-mono text-xs hover:bg-gray-200 disabled:opacity-50"
+                className="rounded bg-muted text-foreground hover:bg-accent hover:text-accent-foreground px-2 py-1 font-mono text-xs disabled:opacity-50"
               >
                 {v}
               </button>

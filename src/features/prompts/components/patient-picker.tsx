@@ -40,7 +40,7 @@ export function PatientPicker({ onSelect }: { onSelect: (analysisId: string, sum
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 text-foreground">
       <div className="flex gap-2">
         <input
           value={search}
@@ -49,20 +49,23 @@ export function PatientPicker({ onSelect }: { onSelect: (analysisId: string, sum
             if (e.key === 'Enter') load();
           }}
           placeholder="Search by name or email"
-          className="flex-1 rounded border px-3 py-2 text-sm"
+          className="flex-1 rounded border border-input bg-background text-foreground placeholder:text-muted-foreground px-3 py-2 text-sm"
         />
-        <button onClick={load} className="rounded border px-3 py-2 text-sm">
+        <button
+          onClick={load}
+          className="rounded border border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground px-3 py-2 text-sm"
+        >
           Search
         </button>
       </div>
 
-      {loading && <div className="p-4">Loading…</div>}
-      {error && <div className="p-4 text-red-600">{error}</div>}
+      {loading && <div className="p-4 text-foreground">Loading…</div>}
+      {error && <div className="p-4 text-red-600 dark:text-red-400">{error}</div>}
 
       {!loading && !error && (
-        <div className="max-h-96 overflow-auto rounded border">
+        <div className="max-h-96 overflow-auto rounded border border-border bg-card text-card-foreground">
           <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-gray-50">
+            <thead className="sticky top-0 bg-muted">
               <tr>
                 <th className="p-2"></th>
                 <th className="p-2 text-left">Name</th>
@@ -74,7 +77,7 @@ export function PatientPicker({ onSelect }: { onSelect: (analysisId: string, sum
             <tbody>
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="p-4 text-center text-gray-500">
+                  <td colSpan={5} className="p-4 text-center text-muted-foreground">
                     No completed analyses found.
                   </td>
                 </tr>
@@ -83,8 +86,8 @@ export function PatientPicker({ onSelect }: { onSelect: (analysisId: string, sum
                 <tr
                   key={r._id}
                   onClick={() => setSelectedId(r._id)}
-                  className={`cursor-pointer border-t hover:bg-gray-50 ${
-                    selectedId === r._id ? 'bg-blue-50' : ''
+                  className={`cursor-pointer border-t border-border hover:bg-muted/50 ${
+                    selectedId === r._id ? 'bg-blue-50 dark:bg-blue-950/40' : ''
                   }`}
                 >
                   <td className="p-2">

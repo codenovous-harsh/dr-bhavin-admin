@@ -7,9 +7,9 @@ import promptService from '@/services/prompt.service';
 import type { PromptTemplate } from '@/types/prompt';
 
 const statusBadge: Record<string, string> = {
-  draft: 'bg-amber-100 text-amber-800',
-  published: 'bg-green-100 text-green-800',
-  archived: 'bg-gray-100 text-gray-700',
+  draft: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200',
+  published: 'bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-200',
+  archived: 'bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300',
 };
 
 export function PromptListTable() {
@@ -65,11 +65,11 @@ export function PromptListTable() {
     }
   }
 
-  if (loading) return <div className="p-4">Loading…</div>;
-  if (error) return <div className="p-4 text-red-600">{error}</div>;
+  if (loading) return <div className="p-4 text-foreground">Loading…</div>;
+  if (error) return <div className="p-4 text-red-600 dark:text-red-400">{error}</div>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 text-foreground">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">AI Prompts</h1>
         <button
@@ -80,53 +80,71 @@ export function PromptListTable() {
         </button>
       </div>
 
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          <tr className="border-b text-left">
-            <th className="py-2 pr-4">Version</th>
-            <th className="py-2 pr-4">Status</th>
-            <th className="py-2 pr-4">Notes</th>
-            <th className="py-2 pr-4">Created</th>
-            <th className="py-2 pr-4">Published</th>
-            <th className="py-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.length === 0 && (
-            <tr>
-              <td colSpan={6} className="py-6 text-center text-gray-500">
-                No prompts yet. Create your first draft.
-              </td>
+      <div className="rounded border border-border bg-card text-card-foreground overflow-hidden">
+        <table className="w-full border-collapse text-sm">
+          <thead className="bg-muted/50">
+            <tr className="border-b border-border text-left">
+              <th className="py-2 px-3">Version</th>
+              <th className="py-2 px-3">Status</th>
+              <th className="py-2 px-3">Notes</th>
+              <th className="py-2 px-3">Created</th>
+              <th className="py-2 px-3">Published</th>
+              <th className="py-2 px-3">Actions</th>
             </tr>
-          )}
-          {rows.map((r) => (
-            <tr key={r._id} className="border-b hover:bg-gray-50">
-              <td className="py-2 pr-4 font-mono">v{r.version}</td>
-              <td className="py-2 pr-4">
-                <span className={`rounded px-2 py-1 text-xs ${statusBadge[r.status]}`}>{r.status}</span>
-              </td>
-              <td className="max-w-xs truncate py-2 pr-4">{r.notes || '—'}</td>
-              <td className="py-2 pr-4">{new Date(r.createdAt).toLocaleString()}</td>
-              <td className="py-2 pr-4">{r.publishedAt ? new Date(r.publishedAt).toLocaleString() : '—'}</td>
-              <td className="space-x-2 py-2">
-                <Link href={`/dashboard/prompts/${r._id}`} className="text-blue-600 hover:underline">
-                  {r.status === 'draft' ? 'Edit' : 'View'}
-                </Link>
-                {r.status === 'draft' && (
-                  <>
-                    <button onClick={() => handlePublish(r._id)} className="text-green-700 hover:underline">
-                      Publish
-                    </button>
-                    <button onClick={() => handleDelete(r._id)} className="text-red-600 hover:underline">
-                      Delete
-                    </button>
-                  </>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={6} className="py-6 text-center text-muted-foreground">
+                  No prompts yet. Create your first draft.
+                </td>
+              </tr>
+            )}
+            {rows.map((r) => (
+              <tr
+                key={r._id}
+                className="border-b border-border last:border-0 hover:bg-muted/50"
+              >
+                <td className="py-2 px-3 font-mono">v{r.version}</td>
+                <td className="py-2 px-3">
+                  <span className={`rounded px-2 py-1 text-xs ${statusBadge[r.status]}`}>
+                    {r.status}
+                  </span>
+                </td>
+                <td className="max-w-xs truncate py-2 px-3 text-foreground/90">{r.notes || '—'}</td>
+                <td className="py-2 px-3 text-foreground/80">{new Date(r.createdAt).toLocaleString()}</td>
+                <td className="py-2 px-3 text-foreground/80">
+                  {r.publishedAt ? new Date(r.publishedAt).toLocaleString() : '—'}
+                </td>
+                <td className="space-x-3 py-2 px-3">
+                  <Link
+                    href={`/dashboard/prompts/${r._id}`}
+                    className="text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    {r.status === 'draft' ? 'Edit' : 'View'}
+                  </Link>
+                  {r.status === 'draft' && (
+                    <>
+                      <button
+                        onClick={() => handlePublish(r._id)}
+                        className="text-green-700 dark:text-green-400 hover:underline"
+                      >
+                        Publish
+                      </button>
+                      <button
+                        onClick={() => handleDelete(r._id)}
+                        className="text-red-600 dark:text-red-400 hover:underline"
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
