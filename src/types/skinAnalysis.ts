@@ -45,7 +45,12 @@ export interface SkinAnalysisResult {
   recommendations: string;
   suggestedTreatments: string;
   skincareRoutine: string;
+  neckAnalysis?: string;
   fullAnalysis: string;
+  // v3.7+ split-tier markdown content. Tier 1 = patient-facing summary; Tier 2 = clinical report.
+  // Empty strings for legacy v1 single-tier outputs.
+  tier1?: string;
+  tier2?: string;
 }
 
 // Main Skin Analysis Interface

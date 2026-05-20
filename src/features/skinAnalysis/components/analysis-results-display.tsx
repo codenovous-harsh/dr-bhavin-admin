@@ -27,6 +27,9 @@ export default function AnalysisResultsDisplay({
     );
   }
 
+  const hasTier1 = typeof analysis.tier1 === 'string' && analysis.tier1.trim().length > 0;
+  const hasTier2 = typeof analysis.tier2 === 'string' && analysis.tier2.trim().length > 0;
+
   return (
     <div className="space-y-6">
       {/* Skin Type Card */}
@@ -36,7 +39,7 @@ export default function AnalysisResultsDisplay({
             <CardTitle>Determined Skin Type</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold text-blue-600">
+            <div className="text-2xl font-semibold text-blue-600 dark:text-blue-400">
               {analysis.skinType}
             </div>
           </CardContent>
@@ -61,17 +64,53 @@ export default function AnalysisResultsDisplay({
         </Card>
       )}
 
-      {/* Full Analysis */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Detailed Analysis & Recommendations</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="prose prose-sm max-w-none">
-            <ReactMarkdown>{analysis.fullAnalysis}</ReactMarkdown>
-          </div>
-        </CardContent>
-      </Card>
+      {/* v3.7 Tier 1 — Patient-facing summary */}
+      {hasTier1 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Tier 1 — Patient Summary</CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              What the patient receives. Plain English, ≤1,000 words.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              <ReactMarkdown>{analysis.tier1!}</ReactMarkdown>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* v3.7 Tier 2 — Clinical report */}
+      {hasTier2 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Tier 2 — Clinical Report</CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              For Dr Garara&apos;s clinical file. Full terminology, confidence tags, safety flags.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              <ReactMarkdown>{analysis.tier2!}</ReactMarkdown>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Full Analysis (raw) — legacy fallback when no Tier 1/Tier 2 split is present */}
+      {!hasTier1 && !hasTier2 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Detailed Analysis &amp; Recommendations</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              <ReactMarkdown>{analysis.fullAnalysis}</ReactMarkdown>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
