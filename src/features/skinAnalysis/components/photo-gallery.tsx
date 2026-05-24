@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import type { SkinAnalysisPhoto } from '@/types/skinAnalysis';
@@ -143,19 +143,6 @@ function ThumbnailTile({
   index: number;
   onClick: () => void;
 }) {
-  const imgRef = useRef<HTMLImageElement | null>(null);
-  const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
-  const [info, setInfo] = useState<string>('');
-
-  useEffect(() => {
-    const el = imgRef.current;
-    if (!el) return;
-    if (el.complete && el.naturalWidth > 0) {
-      setStatus('loaded');
-      setInfo(`${el.naturalWidth}x${el.naturalHeight}`);
-    }
-  }, [photo.url]);
-
   return (
     <div
       role="button"
@@ -171,30 +158,10 @@ function ThumbnailTile({
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        ref={imgRef}
         src={photo.url}
         alt={`Photo ${index + 1}`}
-        width={480}
-        height={640}
         className="absolute inset-0 w-full h-full object-cover"
-        onLoad={(e) => {
-          const t = e.currentTarget;
-          setStatus('loaded');
-          setInfo(`${t.naturalWidth}x${t.naturalHeight}`);
-        }}
-        onError={() => {
-          setStatus('error');
-          setInfo('error');
-        }}
       />
-      <div
-        aria-hidden
-        className="absolute inset-0 bg-center bg-cover"
-        style={{ backgroundImage: `url("${photo.url}")` }}
-      />
-      <div className="absolute top-1 left-1 z-10 px-1.5 py-0.5 rounded bg-black/70 text-[10px] text-white pointer-events-none">
-        {status === 'loaded' ? `OK ${info}` : status === 'error' ? 'ERR' : 'LOAD…'}
-      </div>
       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center pointer-events-none">
         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
           <div className="bg-white rounded-full p-2">
