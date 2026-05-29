@@ -6,19 +6,56 @@ import promptService from '@/services/prompt.service';
 import type { PromptTemplate } from '@/types/prompt';
 import { PromptSimulator } from './prompt-simulator';
 
+// Mirrors the backend ALLOWED_PATHS whitelist in src/services/prompt.service.js.
+// v3.0 fields first (5-step structure); legacy fields kept so admins editing
+// older drafts still see what they reference. Keep this in sync with the
+// backend whitelist when fields are added or removed.
 const VARIABLE_HINTS = [
+  // Patient
+  '{{firstName}}',
+  '{{fullName}}',
   '{{age}}',
   '{{gender}}',
   '{{ethnicity}}',
+  // v3.0 Step 1 — About You
+  '{{questionnaire.pregnancyStatus}}',
+  '{{questionnaire.sunResponse}}',
+  '{{questionnaire.currentMedications}}',
+  '{{questionnaire.currentMedicationsOther}}',
+  '{{questionnaire.recentHormonalChanges}}',
+  '{{questionnaire.allergiesSensitivities}}',
+  '{{questionnaire.allergyIngredients}}',
+  '{{questionnaire.scarringHistory}}',
+  '{{questionnaire.familyHistorySkinConditions}}',
+  // v3.0 Step 2 — Your Skin
+  '{{questionnaire.skinFeel}}',
+  '{{questionnaire.moisturiseFrequency}}',
+  '{{questionnaire.skinInflammation}}',
+  // v3.0 Step 3 — Your Concerns
+  '{{questionnaire.pigmentationConcerns}}',
+  '{{questionnaire.eyeConcerns}}',
+  '{{questionnaire.whatToAddress}}',
+  '{{questionnaire.impactLevel}}',
+  '{{questionnaire.goalTimeline}}',
+  // v3.0 Step 4 — Your Habits
+  '{{questionnaire.currentSkincareRoutine}}',
+  '{{questionnaire.previousTreatments}}',
+  '{{questionnaire.lastTreatmentTiming}}',
+  '{{questionnaire.treatmentSatisfaction}}',
+  '{{questionnaire.lifestyleHabits}}',
+  '{{questionnaire.heatTriggers}}',
+  '{{questionnaire.sunHabits}}',
+  // v3.0 Step 5 — Submit
+  '{{questionnaire.anythingElse}}',
+  '{{questionnaire.whatNext}}',
+  // Legacy (kept so older drafts still type-check; new templates should
+  // prefer the v3.0 fields above)
   '{{questionnaire.skinMoisture}}',
   '{{questionnaire.skinSebum}}',
-  '{{questionnaire.skinInflammation}}',
   '{{questionnaire.pigmentation}}',
   '{{questionnaire.skinElasticity}}',
   '{{questionnaire.skinConcerns}}',
-  '{{questionnaire.lifestyleHabits}}',
   '{{questionnaire.suncareHabits}}',
-  '{{questionnaire.eyeConcerns}}',
   '{{questionnaire.otherConcerns}}',
   '{{questionnaire.otherConcernsText}}',
   '{{questionnaire.addressConcerns}}',

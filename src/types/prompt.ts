@@ -30,8 +30,11 @@ export interface SimulationColumnResult {
 export interface SimulationPatient {
   id: string;
   firstName: string;
-  lastName: string;
-  age: number;
+  lastName?: string;
+  fullName?: string;
+  // Backend changed age from Number to String in v3.0; accept both for
+  // historical records that may still serialise as number.
+  age: number | string;
   gender: string;
   ethnicity: string;
   questionnaire: Record<string, unknown>;
