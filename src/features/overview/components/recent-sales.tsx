@@ -97,7 +97,7 @@ export function RecentSales() {
         ) : (
           <div className='space-y-6'>
             {submissions.map((submission) => {
-              const initials = `${submission.firstName[0]}${submission.lastName[0]}`.toUpperCase();
+              const initials = `${submission.firstName?.[0] ?? ''}${submission.lastName?.[0] ?? ''}`.toUpperCase();
               return (
                 <div key={submission._id} className='flex items-center gap-4'>
                   <Avatar className='h-9 w-9'>

@@ -21,12 +21,14 @@ class SkinAnalysisService {
     // Create FormData for multipart upload
     const data = new FormData();
 
-    // Add user information
+    // Add user information. lastName/phone are optional in v3.0; coerce to
+    // empty strings so FormData.append doesn't blow up on undefined.
     data.append('firstName', formData.firstName);
-    data.append('lastName', formData.lastName);
+    data.append('lastName', formData.lastName ?? '');
+    if (formData.fullName !== undefined) data.append('fullName', formData.fullName);
     data.append('email', formData.email);
-    data.append('age', formData.age.toString());
-    data.append('phone', formData.phone);
+    data.append('age', String(formData.age));
+    data.append('phone', formData.phone ?? '');
     data.append('gender', formData.gender);
     data.append('ethnicity', formData.ethnicity);
 

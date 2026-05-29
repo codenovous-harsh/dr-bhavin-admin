@@ -1,34 +1,66 @@
-// Questionnaire Response Interface
+// Questionnaire Response Interface — v3.0 (5-step structure) + legacy back-compat
 export interface SkinAnalysisQuestionnaire {
+  // Step 1 — About You
+  pregnancyStatus?: string | null;
+  sunResponse?: string | null;
+  currentMedications?: string[];
+  currentMedicationsOther?: string | null;
+  recentHormonalChanges?: string[];
+  allergiesSensitivities?: string[];
+  allergyIngredients?: string | null;
+  scarringHistory?: string[];
+  familyHistorySkinConditions?: string[];
+
+  // Step 2 — Your Skin
+  skinFeel?: string | null;
+  moisturiseFrequency?: string | null;
+  skinInflammation?: string[];
+
+  // Step 3 — Your Concerns
+  pigmentationConcerns?: string[];
+  eyeConcerns?: string[];
+  whatToAddress?: string[];
+  impactLevel?: string | null;
+  goalTimeline?: string | null;
+
+  // Step 4 — Your Habits
+  currentSkincareRoutine?: string[];
+  previousTreatments?: string[];
+  lastTreatmentTiming?: string | null;
+  treatmentSatisfaction?: string | null;
+  lifestyleHabits?: string[];
+  heatTriggers?: string[];
+  sunHabits?: string[];
+
+  // Step 5 — Anything Else
+  anythingElse?: string | null;
+  whatNext?: string | null;
+
+  // Legacy fields (kept for back-compat with records created before v3.0
+  // and for the admin's existing manual-entry form)
   skinMoisture?: string[];
   skinSebum?: string[];
-  skinInflammation?: string[];
   pigmentation?: string;
-  lifestyleHabits?: string[];
+  skinElasticity?: string[];
+  skinConcerns?: string[];
   suncareHabits?: string[];
-  eyeConcerns?: string[];
   otherConcerns?: string[];
+  otherConcernsText?: string | null;
   addressConcerns?: string[];
 }
 
-// User Information Interface
+// User Information Interface — v3.0 relaxations: lastName/phone optional,
+// fullName added, age accepts string (backend changed type), gender enum widened,
+// ethnicity is free-form string (enum removed on backend).
 export interface SkinAnalysisUserInfo {
   firstName: string;
-  lastName: string;
+  lastName?: string;
+  fullName?: string;
   email: string;
-  age: number;
-  phone: string;
-  gender: 'male' | 'female' | 'other' | 'prefer_not_to_say';
-  ethnicity:
-    | 'caucasian'
-    | 'black'
-    | 'asian_east'
-    | 'asian_south'
-    | 'mediterranean'
-    | 'middle_eastern'
-    | 'multiracial'
-    | 'other'
-    | 'prefer_not_to_say';
+  age: number | string;
+  phone?: string;
+  gender: 'male' | 'female' | 'other' | 'prefer not to say' | 'prefer_not_to_say';
+  ethnicity: string;
 }
 
 // Photo Interface
@@ -57,12 +89,14 @@ export interface SkinAnalysisResult {
 export interface SkinAnalysis {
   _id: string;
   firstName: string;
-  lastName: string;
+  lastName?: string;
+  fullName?: string;
   email: string;
-  age: number;
-  phone: string;
+  age: number | string;
+  phone?: string;
   gender: string;
   ethnicity: string;
+  consentGiven?: boolean;
   questionnaire: SkinAnalysisQuestionnaire;
   photos: SkinAnalysisPhoto[];
   analysis: SkinAnalysisResult;
@@ -71,7 +105,8 @@ export interface SkinAnalysis {
   processedAt?: string;
   createdAt: string;
   updatedAt: string;
-  fullName?: string;
+  // Virtual derived from firstName + lastName when fullName field is empty.
+  displayName?: string;
 }
 
 // Analysis Response Interface
@@ -125,24 +160,19 @@ export interface SkinAnalysisStatsResponse {
 }
 
 // Form Data for Creating Analysis
+// NOTE: The current admin manual-entry form still collects legacy questionnaire
+// fields. Backend now expects v3.0; the form should be rebuilt as a 5-step v3.0
+// form. Until then, this type stays permissive.
 export interface SkinAnalysisFormData {
   // User Info
   firstName: string;
-  lastName: string;
+  lastName?: string;
+  fullName?: string;
   email: string;
-  age: number;
-  phone: string;
-  gender: 'male' | 'female' | 'other' | 'prefer_not_to_say';
-  ethnicity:
-    | 'caucasian'
-    | 'black'
-    | 'asian_east'
-    | 'asian_south'
-    | 'mediterranean'
-    | 'middle_eastern'
-    | 'multiracial'
-    | 'other'
-    | 'prefer_not_to_say';
+  age: number | string;
+  phone?: string;
+  gender: 'male' | 'female' | 'other' | 'prefer not to say' | 'prefer_not_to_say';
+  ethnicity: string;
 
   // Questionnaire
   questionnaire: SkinAnalysisQuestionnaire;
@@ -271,4 +301,209 @@ export const ETHNICITY_OPTIONS = [
   { value: 'multiracial', label: 'Multiracial' },
   { value: 'other', label: 'Other' },
   { value: 'prefer_not_to_say', label: 'Prefer Not to say' },
+];
+
+// =============================================================================
+// v3.0 Questionnaire Options
+// =============================================================================
+// PROVISIONAL — these labels are placeholders matching the v3.0 questionnaire
+// structure but have NOT been reconciled against the live patient-facing form.
+// Before rebuilding the admin manual-entry form, copy the actual option labels
+// from the patient form so the values stored line up with what real patients
+// submit. The admin questionnaire-display component renders whatever string
+// values arrive from the API, so display works regardless.
+
+export const PREGNANCY_STATUS_OPTIONS = [
+  'Not pregnant or breastfeeding',
+  'Pregnant',
+  'Breastfeeding',
+  'Trying to conceive',
+  'Prefer not to say',
+];
+
+export const SUN_RESPONSE_OPTIONS = [
+  'Always burns, never tans',
+  'Usually burns, tans minimally',
+  'Sometimes burns, tans gradually',
+  'Rarely burns, tans easily',
+  'Very rarely burns, tans deeply',
+  'Never burns, deeply pigmented',
+];
+
+export const CURRENT_MEDICATIONS_OPTIONS = [
+  'None',
+  'Oral contraceptive pill',
+  'HRT',
+  'Isotretinoin (Roaccutane / Accutane)',
+  'Topical retinoids',
+  'Topical steroids',
+  'Antibiotics for acne',
+  'Blood thinners',
+  'Immunosuppressants',
+  'Other',
+];
+
+export const RECENT_HORMONAL_CHANGES_OPTIONS = [
+  'None',
+  'Pregnancy or post-partum',
+  'Started or stopped oral contraceptive',
+  'Started or stopped HRT',
+  'Perimenopause / menopause',
+  'Recent significant weight change',
+];
+
+export const ALLERGIES_SENSITIVITIES_OPTIONS = [
+  'None',
+  'Fragrance',
+  'Essential oils',
+  'Sulfates',
+  'Lanolin',
+  'Specific actives (e.g. retinol, acids)',
+  'Other (specify)',
+];
+
+export const SCARRING_HISTORY_OPTIONS = [
+  'No history of abnormal scarring',
+  'Keloid scarring (personal)',
+  'Keloid scarring (family)',
+  'Vitiligo (personal)',
+  'Vitiligo (family)',
+  'Hyperpigmentation after injury',
+  'Hypopigmentation after injury',
+];
+
+export const FAMILY_HISTORY_SKIN_CONDITIONS_OPTIONS = [
+  'None known',
+  'Melasma',
+  'Eczema',
+  'Psoriasis',
+  'Rosacea',
+  'Skin cancer',
+  'Severe acne',
+];
+
+export const SKIN_FEEL_OPTIONS = [
+  'Tight and dry',
+  'Comfortable',
+  'Combination — dry cheeks, oily T-zone',
+  'Oily all over',
+  'Sensitive and easily reactive',
+  'Dehydrated despite oiliness',
+];
+
+export const MOISTURISE_FREQUENCY_OPTIONS = [
+  'I do not moisturise',
+  'A few times a week',
+  'Once a day',
+  'Twice a day',
+  'More than twice a day',
+];
+
+export const PIGMENTATION_CONCERNS_V3_OPTIONS = [
+  'None',
+  'Melasma',
+  'Post-inflammatory hyperpigmentation',
+  'Sun spots / age spots',
+  'Freckles',
+  'Uneven skin tone',
+  'Dark patches (specific area)',
+];
+
+export const WHAT_TO_ADDRESS_OPTIONS = [
+  'Pigmentation / uneven tone',
+  'Fine lines and wrinkles',
+  'Loss of firmness / sagging',
+  'Acne / breakouts',
+  'Acne scars',
+  'Rosacea / redness',
+  'Texture / pores',
+  'Dullness',
+  'Eye area (dark circles, lines, puffiness)',
+  'Neck lines or laxity',
+  'Skin health and prevention',
+];
+
+export const IMPACT_LEVEL_OPTIONS = [
+  'Minimal — I rarely think about it',
+  'Mild — it bothers me occasionally',
+  'Moderate — it affects my confidence',
+  'Significant — it affects my daily life',
+  'Severe — I avoid social situations because of it',
+];
+
+export const GOAL_TIMELINE_OPTIONS = [
+  'As soon as possible',
+  'Within 3 months',
+  'Within 6 months',
+  'Within a year',
+  'No specific timeline — long-term skin health',
+];
+
+export const CURRENT_SKINCARE_ROUTINE_OPTIONS = [
+  'Cleanser',
+  'Toner / essence',
+  'Vitamin C serum',
+  'Retinoid / retinol',
+  'Exfoliating acids (AHA / BHA)',
+  'Niacinamide',
+  'Moisturiser',
+  'SPF daily',
+  'Eye cream',
+  'I do not have a routine',
+];
+
+export const PREVIOUS_TREATMENTS_OPTIONS = [
+  'None',
+  'Chemical peel',
+  'Microneedling',
+  'Laser (e.g. resurfacing, hair removal, pigmentation)',
+  'IPL',
+  'Botox / anti-wrinkle injections',
+  'Dermal fillers',
+  'Polynucleotides / PRP / regenerative injectables',
+  'HIFU / Ultherapy',
+  'Radiofrequency',
+];
+
+export const LAST_TREATMENT_TIMING_OPTIONS = [
+  'Within the last month',
+  '1–3 months ago',
+  '3–6 months ago',
+  '6–12 months ago',
+  'Over a year ago',
+  'Never',
+];
+
+export const TREATMENT_SATISFACTION_OPTIONS = [
+  'Very satisfied',
+  'Satisfied',
+  'Mixed results',
+  'Dissatisfied',
+  'N/A — no prior treatments',
+];
+
+export const HEAT_TRIGGERS_OPTIONS = [
+  'None',
+  'Hot showers / baths',
+  'Saunas / steam rooms',
+  'Hot yoga / intense exercise',
+  'Cooking over heat',
+  'Direct sun exposure',
+  'Hot drinks / spicy food',
+];
+
+export const SUN_HABITS_V3_OPTIONS = [
+  'Wear SPF daily, year-round',
+  'Wear SPF on sunny days only',
+  'Wear SPF only on holiday',
+  'Rarely wear SPF',
+  'Seek shade and cover up',
+  'Use sun beds / actively tan',
+];
+
+export const WHAT_NEXT_OPTIONS = [
+  'A clear treatment plan',
+  'Product recommendations',
+  'A consultation with Dr Garara',
+  'Just exploring my options',
 ];

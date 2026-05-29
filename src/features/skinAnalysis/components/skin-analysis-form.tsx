@@ -1,5 +1,15 @@
 'use client';
 
+// STALE — this component is exported from features/skinAnalysis/index.ts but
+// no admin page currently imports SkinAnalysisForm (verified via grep). It
+// still collects the LEGACY questionnaire shape (skinMoisture, skinSebum,
+// pigmentation, etc.) and would not submit successfully against the v3.0
+// backend if it were re-mounted. If admins need to create analyses from the
+// admin UI, this form should be rebuilt as a 5-step v3.0 form sourced from
+// the *_V3_*OPTIONS / *_V3_OPTIONS arrays in src/types/skinAnalysis.ts.
+// Until then, the legacy options remain in scope to keep this file
+// type-checking; do not rely on this form in production.
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import skinAnalysisService from '@/services/skinAnalysis.service';
@@ -489,7 +499,7 @@ export default function SkinAnalysisForm() {
         formData.firstName &&
         formData.lastName &&
         formData.email &&
-        formData.age > 0 &&
+        Number(formData.age) > 0 &&
         formData.phone
       );
     }
