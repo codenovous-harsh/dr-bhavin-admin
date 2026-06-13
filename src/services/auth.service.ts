@@ -199,6 +199,42 @@ class AuthService {
   }
 
   /**
+   * Request a password reset email
+   */
+  async forgotPassword(email: string): Promise<{ status: string; message: string }> {
+    try {
+      const response = await api.post<{ status: string; message: string }>(
+        '/auth/forgot-password',
+        { email }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.message || 'Failed to send reset email');
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Reset password using a token from the reset email
+   */
+  async resetPassword(token: string, password: string): Promise<{ status: string; message: string }> {
+    try {
+      const response = await api.post<{ status: string; message: string }>(
+        '/auth/reset-password',
+        { token, password }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.message || 'Failed to reset password');
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Update profile
    */
   async updateProfile(data: Partial<User>): Promise<User> {

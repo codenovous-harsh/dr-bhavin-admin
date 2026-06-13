@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Camera, Mail, User, Shield, Key } from 'lucide-react';
+import { ChangePasswordDialog } from './change-password-dialog';
 
 export default function ProfileViewPage() {
   // Dummy user data
@@ -123,7 +124,7 @@ export default function ProfileViewPage() {
                 </p>
               </div>
             </div>
-            <Button variant='outline'>Update</Button>
+            <ChangePasswordDialog />
           </div>
           <Separator />
           <div className='flex items-center justify-between'>
