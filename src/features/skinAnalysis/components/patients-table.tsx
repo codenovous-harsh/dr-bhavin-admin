@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,7 +15,7 @@ import {
 } from '@/components/ui/table';
 import type { SkinAnalysis } from '@/types/skinAnalysis';
 import { Icons } from '@/components/icons';
-import SendEmailDialog from './send-email-dialog';
+import skinAnalysisService from '@/services/skinAnalysis.service';
 
 interface PatientsTableProps {
   analyses: SkinAnalysis[];
@@ -26,7 +27,30 @@ export default function PatientsTable({
   loading = false,
 }: PatientsTableProps) {
   const router = useRouter();
-  const [emailTarget, setEmailTarget] = useState<SkinAnalysis | null>(null);
+  const [sendingId, setSendingId] = useState<string | null>(null);
+
+  const handleSendReport = async (analysis: SkinAnalysis) => {
+    if (analysis.status !== 'completed') {
+      toast.error('Report is not ready yet — analysis is not completed');
+      return;
+    }
+    if (
+      !window.confirm(
+        `Send the Tier 1 report to ${analysis.email}?`
+      )
+    ) {
+      return;
+    }
+    setSendingId(analysis._id);
+    try {
+      await skinAnalysisService.sendAnalysisReport(analysis._id);
+      toast.success(`Tier 1 report sent to ${analysis.email}`);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to send report');
+    } finally {
+      setSendingId(null);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: any; label: string }> = {
@@ -142,9 +166,18 @@ export default function PatientsTable({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setEmailTarget(analysis)}
+                    onClick={() => handleSendReport(analysis)}
+                    disabled={
+                      analysis.status !== 'completed' ||
+                      sendingId === analysis._id
+                    }
+                    title={
+                      analysis.status !== 'completed'
+                        ? 'Report available once analysis is completed'
+                        : 'Send the Tier 1 report to the patient'
+                    }
                   >
-                    Email
+                    {sendingId === analysis._id ? 'Sending…' : 'Email'}
                   </Button>
                   <Button
                     variant="outline"
@@ -159,16 +192,6 @@ export default function PatientsTable({
           ))}
         </TableBody>
       </Table>
-      {emailTarget && (
-        <SendEmailDialog
-          open={!!emailTarget}
-          onOpenChange={(open) => !open && setEmailTarget(null)}
-          analysisId={emailTarget._id}
-          patientName={`${emailTarget.firstName} ${emailTarget.lastName}`}
-          patientEmail={emailTarget.email}
-          emailHistory={(emailTarget as any).emailHistory || []}
-        />
-      )}
     </div>
   );
 }

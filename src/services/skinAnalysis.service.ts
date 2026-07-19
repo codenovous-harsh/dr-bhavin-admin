@@ -119,6 +119,16 @@ class SkinAnalysisService {
   }
 
   /**
+   * Send the Tier 1 report email to the patient for a specific analysis (Admin only)
+   */
+  async sendAnalysisReport(
+    id: string
+  ): Promise<{ status: string; message: string; data: { emailHistory: any[] } }> {
+    const response = await api.post(`${SKIN_ANALYSIS_API_URL}/${id}/email-report`);
+    return response.data;
+  }
+
+  /**
    * Get analysis statistics (Admin only)
    * @returns Analysis statistics
    */
