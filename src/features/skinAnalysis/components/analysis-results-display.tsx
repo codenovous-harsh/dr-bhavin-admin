@@ -30,6 +30,21 @@ export default function AnalysisResultsDisplay({
   const hasTier1 = typeof analysis.tier1 === 'string' && analysis.tier1.trim().length > 0;
   const hasTier2 = typeof analysis.tier2 === 'string' && analysis.tier2.trim().length > 0;
 
+  // Shared prose styling for rendered markdown reports. Beyond the base
+  // typography plugin, this pulls headings out with clear size/weight/colour,
+  // adds a divider under the top-level section headings, and opens up spacing
+  // between paragraphs and list items so long clinical reports are scannable.
+  const reportProse =
+    'prose prose-sm dark:prose-invert max-w-none ' +
+    'prose-headings:font-semibold prose-headings:text-foreground ' +
+    'prose-h1:text-xl prose-h1:mt-8 prose-h1:mb-4 ' +
+    'prose-h2:text-lg prose-h2:mt-8 prose-h2:mb-3 prose-h2:pb-2 prose-h2:border-b prose-h2:border-border ' +
+    'prose-h3:text-base prose-h3:font-semibold prose-h3:text-blue-700 dark:prose-h3:text-blue-400 prose-h3:mt-6 prose-h3:mb-2 ' +
+    'prose-p:my-3 prose-p:leading-relaxed ' +
+    'prose-li:my-1 prose-ul:my-3 prose-ol:my-3 ' +
+    'prose-strong:text-foreground prose-strong:font-semibold ' +
+    'prose-hr:my-6';
+
   return (
     <div className="space-y-6">
       {/* Skin Type Card */}
@@ -74,7 +89,7 @@ export default function AnalysisResultsDisplay({
             </p>
           </CardHeader>
           <CardContent>
-            <div className="prose prose-sm dark:prose-invert max-w-none">
+            <div className={reportProse}>
               <ReactMarkdown>{analysis.tier1!}</ReactMarkdown>
             </div>
           </CardContent>
@@ -91,7 +106,7 @@ export default function AnalysisResultsDisplay({
             </p>
           </CardHeader>
           <CardContent>
-            <div className="prose prose-sm dark:prose-invert max-w-none">
+            <div className={reportProse}>
               <ReactMarkdown>{analysis.tier2!}</ReactMarkdown>
             </div>
           </CardContent>
@@ -105,7 +120,7 @@ export default function AnalysisResultsDisplay({
             <CardTitle>Detailed Analysis &amp; Recommendations</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="prose prose-sm dark:prose-invert max-w-none">
+            <div className={reportProse}>
               <ReactMarkdown>{analysis.fullAnalysis}</ReactMarkdown>
             </div>
           </CardContent>

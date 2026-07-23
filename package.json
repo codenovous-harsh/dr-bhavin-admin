@@ -10,7 +10,7 @@
     "dev": "next dev",
     "build": "next build",
     "pages:build": "opennextjs-cloudflare build && npm run copy-worker",
-    "copy-worker": "cp -r .open-next/cloudflare .open-next/assets/_worker && cp .open-next/worker.js .open-next/assets/_worker.js && cp -r .open-next/server-functions .open-next/assets/ && cp -r .open-next/middleware .open-next/assets/ && cp -r .open-next/.build .open-next/assets/ && sed -i.bak 's|\"\\.\/cloudflare\/|\"./_worker/|g' .open-next/assets/_worker.js && rm .open-next/assets/_worker.js.bak",
+    "copy-worker": "cp -r .open-next/cloudflare .open-next/assets/_worker && cp .open-next/worker.js .open-next/assets/_worker.js && cp -r .open-next/server-functions .open-next/assets/ && cp -r .open-next/middleware .open-next/assets/ && cp -r .open-next/.build .open-next/assets/ && sed -i.bak 's|\"\\./cloudflare/|\"./_worker/|g' .open-next/assets/_worker.js && rm .open-next/assets/_worker.js.bak",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "eslint src --fix && bun format",
@@ -107,8 +107,8 @@
   "devDependencies": {
     "@faker-js/faker": "^9.3.0",
     "@opennextjs/cloudflare": "^1.16.3",
+    "@tailwindcss/typography": "^0.5.20",
     "@types/node": "22.10.2",
-    "wrangler": "^3.101.0",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.2",
     "@types/sort-by": "^1.2.3",
@@ -121,6 +121,7 @@
     "prettier-plugin-tailwindcss": "^0.6.11",
     "tsx": "^4.21.0",
     "tw-animate-css": "^1.2.4",
-    "vercel": "^39.2.3"
+    "vercel": "^39.2.3",
+    "wrangler": "^3.101.0"
   }
 }
