@@ -110,6 +110,87 @@ export function RichTextEditor({
     input.click();
   }, []);
 
+  // Native-table controls (Quill's built-in table module). Insert a starter
+  // table, then place the cursor in a cell to add rows/columns.
+  const runTable = useCallback(
+    (
+      method:
+        | 'insertTable'
+        | 'insertRowBelow'
+        | 'insertColumnRight'
+        | 'deleteRow'
+        | 'deleteColumn'
+        | 'deleteTable'
+    ) => {
+      const quill = reactQuillRef.current?.getEditor?.();
+      const tableModule = quill?.getModule?.('table');
+      if (!quill || !tableModule) {
+        toast.error('Click inside the editor, then try again');
+        return;
+      }
+      try {
+        if (method === 'insertTable') {
+          tableModule.insertTable(3, 3);
+        } else {
+          tableModule[method]();
+        }
+      } catch {
+        toast.error('Put the cursor inside a table cell first');
+      }
+    },
+    []
+  );
+
+  // Clean up pasted PLAIN text (e.g. copied from a PDF/Word) so each source
+  // line doesn't become its own paragraph. Genuine rich-HTML pastes pass
+  // through Quill's own handling untouched.
+  useEffect(() => {
+    let root: HTMLElement | null = null;
+
+    const escapeHtml = (s: string) =>
+      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    const handlePaste = (e: ClipboardEvent) => {
+      const quill = reactQuillRef.current?.getEditor?.();
+      if (!quill) return;
+      const html = e.clipboardData?.getData('text/html');
+      const text = e.clipboardData?.getData('text/plain');
+      if (html && html.trim()) return; // rich paste → let Quill handle it
+      if (!text) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      const paragraphs = text
+        .replace(/\r\n/g, '\n')
+        .split(/\n{2,}/) // blank line = paragraph break
+        .map((p) => p.replace(/\s*\n\s*/g, ' ').trim()) // join wrapped lines
+        .filter(Boolean);
+
+      const cleanHtml = (paragraphs.length ? paragraphs : [text.trim()])
+        .map((p) => `<p>${escapeHtml(p)}</p>`)
+        .join('');
+
+      const range = quill.getSelection(true);
+      const index = range ? range.index : quill.getLength();
+      quill.clipboard.dangerouslyPasteHTML(index, cleanHtml, 'user');
+    };
+
+    // The editor mounts asynchronously (dynamic import); wait for its root.
+    const timer = setInterval(() => {
+      const quill = reactQuillRef.current?.getEditor?.();
+      if (quill?.root) {
+        root = quill.root;
+        root.addEventListener('paste', handlePaste, true);
+        clearInterval(timer);
+      }
+    }, 200);
+
+    return () => {
+      clearInterval(timer);
+      if (root) root.removeEventListener('paste', handlePaste, true);
+    };
+  }, []);
+
   // Quill modules configuration
   const modules = useMemo(
     () => ({
@@ -130,6 +211,7 @@ export function RichTextEditor({
       clipboard: {
         matchVisual: false,
       },
+      table: true,
     }),
     [imageHandler]
   );
@@ -145,10 +227,57 @@ export function RichTextEditor({
     'blockquote',
     'link',
     'image',
+    'table',
   ];
 
   return (
     <div className={cn('rich-text-editor-wrapper', className)}>
+      {editable && (
+        <div className="mb-2 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => runTable('insertTable')}
+            className="rounded border px-2 py-1 text-xs hover:bg-muted"
+          >
+            Insert table
+          </button>
+          <button
+            type="button"
+            onClick={() => runTable('insertRowBelow')}
+            className="rounded border px-2 py-1 text-xs hover:bg-muted"
+          >
+            + Row
+          </button>
+          <button
+            type="button"
+            onClick={() => runTable('insertColumnRight')}
+            className="rounded border px-2 py-1 text-xs hover:bg-muted"
+          >
+            + Column
+          </button>
+          <button
+            type="button"
+            onClick={() => runTable('deleteRow')}
+            className="rounded border px-2 py-1 text-xs hover:bg-muted"
+          >
+            − Row
+          </button>
+          <button
+            type="button"
+            onClick={() => runTable('deleteColumn')}
+            className="rounded border px-2 py-1 text-xs hover:bg-muted"
+          >
+            − Column
+          </button>
+          <button
+            type="button"
+            onClick={() => runTable('deleteTable')}
+            className="rounded border px-2 py-1 text-xs hover:bg-muted"
+          >
+            Delete table
+          </button>
+        </div>
+      )}
       <ReactQuill
         // @ts-ignore - react-quill-new doesn't properly export ref types
         ref={reactQuillRef}

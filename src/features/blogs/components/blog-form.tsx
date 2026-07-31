@@ -31,6 +31,9 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>(initialData?.tags || []);
+  const [faqRows, setFaqRows] = useState<{ question: string; answer: string }[]>(
+    initialData?.faqs || []
+  );
 
   // Upload state for featured image
   const [featuredImageUpload, setFeaturedImageUpload] = useState<{
@@ -60,15 +63,18 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
     resolver: zodResolver(blogFormSchema),
     defaultValues: {
       title: initialData?.title || '',
+      slug: initialData?.slug || '',
       excerpt: initialData?.excerpt || '',
       content: initialData?.content || '',
       featuredImageUrl: initialData?.featuredImage.url || undefined,
       featuredImageKey: initialData?.featuredImage.key || undefined,
+      featuredImageAlt: initialData?.featuredImage?.alt || '',
       author: {
         name: initialData?.author.name || '',
         avatarUrl: initialData?.author.avatar?.url || undefined,
         avatarKey: initialData?.author.avatar?.key || undefined,
-        title: initialData?.author.title || 'Author'
+        title: initialData?.author.title || 'Author',
+        bio: initialData?.author.bio || ''
       },
       tags: initialData?.tags || [],
       status: initialData?.status || 'draft',
@@ -76,6 +82,14 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
       metadata: {
         seoTitle: initialData?.metadata?.seoTitle || '',
         seoDescription: initialData?.metadata?.seoDescription || ''
+      },
+      medicalReview: {
+        reviewedBy: initialData?.medicalReview?.reviewedBy || 'Dr Bhavin Garara',
+        credentialLine:
+          initialData?.medicalReview?.credentialLine || 'GMC No. 7155707',
+        reviewedAt: initialData?.medicalReview?.reviewedAt
+          ? String(initialData.medicalReview.reviewedAt).substring(0, 10)
+          : ''
       }
     }
   });
@@ -108,6 +122,19 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
       addTag();
     }
   };
+
+  const addFaqRow = () =>
+    setFaqRows((rows) => [...rows, { question: '', answer: '' }]);
+  const updateFaqRow = (
+    index: number,
+    field: 'question' | 'answer',
+    value: string
+  ) =>
+    setFaqRows((rows) =>
+      rows.map((row, i) => (i === index ? { ...row, [field]: value } : row))
+    );
+  const removeFaqRow = (index: number) =>
+    setFaqRows((rows) => rows.filter((_, i) => i !== index));
 
   // Upload handler for featured image
   const uploadFeaturedImage = async (file: File) => {
@@ -206,39 +233,52 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
       // Use pre-uploaded URLs from state instead of uploading during submission
       const blogData = {
         title: data.title,
+        slug: data.slug || undefined,
         excerpt: data.excerpt,
         content: data.content,
         featuredImageUrl: featuredImageUpload.url || data.featuredImageUrl || undefined,
         featuredImageKey: featuredImageUpload.key || data.featuredImageKey || undefined,
+        featuredImageAlt: data.featuredImageAlt || undefined,
         author: {
           name: data.author.name,
           avatarUrl: avatarUpload.url || data.author.avatarUrl || undefined,
           avatarKey: avatarUpload.key || data.author.avatarKey || undefined,
-          title: data.author.title || 'Author'
+          title: data.author.title || 'Author',
+          bio: data.author.bio || undefined
         },
         tags: data.tags,
         status: data.status,
         isFeatured: data.isFeatured,
-        metadata: data.metadata
+        metadata: data.metadata,
+        medicalReview: {
+          reviewedBy: data.medicalReview?.reviewedBy || undefined,
+          credentialLine: data.medicalReview?.credentialLine || undefined,
+          reviewedAt: data.medicalReview?.reviewedAt || null
+        },
+        faqs: faqRows
+          .map((f) => ({ question: f.question.trim(), answer: f.answer.trim() }))
+          .filter((f) => f.question && f.answer)
       };
 
-      if (mode === 'create') {
-        // Validate required URLs for create mode
-        if (!blogData.featuredImageUrl || !blogData.featuredImageKey) {
-          toast.error('Featured image is required');
-          return;
-        }
+      // A featured image is only required to PUBLISH — drafts save without one.
+      const hasFeaturedImage =
+        Boolean(blogData.featuredImageUrl) ||
+        Boolean(initialData?.featuredImage?.url);
+      if (data.status === 'published' && !hasFeaturedImage) {
+        toast.error('A featured image is required to publish');
+        return;
+      }
 
-        // Type assertion after validation - we know these are defined
-        await blogService.createBlog({
-          ...blogData,
-          featuredImageUrl: blogData.featuredImageUrl,
-          featuredImageKey: blogData.featuredImageKey
-        });
-        toast.success('Blog created successfully');
+      if (mode === 'create') {
+        await blogService.createBlog(blogData);
+        toast.success(
+          data.status === 'published' ? 'Blog published' : 'Draft saved'
+        );
       } else if (initialData) {
         await blogService.updateBlog(initialData._id, blogData);
-        toast.success('Blog updated successfully');
+        toast.success(
+          data.status === 'published' ? 'Blog published' : 'Blog updated'
+        );
       }
 
       router.push('/dashboard/blogs');
@@ -327,6 +367,13 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
                   required
                 />
 
+                <FormInput
+                  control={form.control}
+                  name="slug"
+                  label="URL slug"
+                  placeholder="Leave blank to auto-generate, or e.g. future-of-medical-aesthetics-2026-2030"
+                />
+
                 <FormTextarea
                   control={form.control}
                   name="excerpt"
@@ -378,7 +425,7 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
                   control={form.control}
                   name="metadata.seoTitle"
                   label="SEO Title"
-                  placeholder="Custom SEO title (max 60 characters)"
+                  placeholder="Custom SEO title (max 70 characters)"
                 />
 
                 <FormTextarea
@@ -392,6 +439,91 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
                     showCharCount: true
                   }}
                 />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Medical Review</CardTitle>
+                <CardDescription>
+                  Shown as &ldquo;Medically reviewed by &hellip; (&hellip;) &middot;
+                  Last reviewed: &hellip;&rdquo;
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormInput
+                  control={form.control}
+                  name="medicalReview.reviewedBy"
+                  label="Reviewed by"
+                  placeholder="Dr Bhavin Garara"
+                />
+                <FormInput
+                  control={form.control}
+                  name="medicalReview.credentialLine"
+                  label="Credential"
+                  placeholder="GMC No. 7155707"
+                />
+                <div className="space-y-2">
+                  <Label htmlFor="medicalReview-reviewedAt">
+                    Last reviewed date
+                  </Label>
+                  <Input
+                    id="medicalReview-reviewedAt"
+                    type="date"
+                    {...form.register('medicalReview.reviewedAt')}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>FAQs</CardTitle>
+                <CardDescription>
+                  Question &amp; answer rows shown as an accordion on the post
+                  and used for FAQ rich results.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {faqRows.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    No FAQs added yet.
+                  </p>
+                )}
+                {faqRows.map((row, index) => (
+                  <div key={index} className="space-y-2 rounded-lg border p-4">
+                    <div className="flex items-center justify-between">
+                      <Label>FAQ {index + 1}</Label>
+                      <button
+                        type="button"
+                        onClick={() => removeFaqRow(index)}
+                        className="text-muted-foreground transition-colors hover:text-destructive"
+                        aria-label="Remove FAQ"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <Input
+                      value={row.question}
+                      onChange={(e) =>
+                        updateFaqRow(index, 'question', e.target.value)
+                      }
+                      placeholder="Question"
+                    />
+                    <textarea
+                      value={row.answer}
+                      onChange={(e) =>
+                        updateFaqRow(index, 'answer', e.target.value)
+                      }
+                      placeholder="Answer"
+                      rows={3}
+                      className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    />
+                  </div>
+                ))}
+                <Button type="button" variant="outline" onClick={addFaqRow}>
+                  Add FAQ
+                </Button>
               </CardContent>
             </Card>
           </div>
@@ -417,6 +549,15 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
                   }}
                   required={mode === 'create'}
                 />
+
+                <div className="mt-4">
+                  <FormInput
+                    control={form.control}
+                    name="featuredImageAlt"
+                    label="Image alt text"
+                    placeholder="Describe the image (accessibility & SEO)"
+                  />
+                </div>
 
                 {/* Upload progress indicator */}
                 {featuredImageUpload.uploading && (
@@ -475,6 +616,14 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
                   name="author.title"
                   label="Author Title"
                   placeholder="e.g., Cosmetic Dermatologist"
+                />
+
+                <FormTextarea
+                  control={form.control}
+                  name="author.bio"
+                  label="Author Bio"
+                  placeholder="Short 'About the author' shown at the end of the post"
+                  config={{ rows: 4, maxLength: 600, showCharCount: true }}
                 />
 
                 <FormFileUpload

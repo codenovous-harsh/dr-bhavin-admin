@@ -8,18 +8,27 @@ export interface BlogAuthor {
     key?: string;
   };
   title?: string;
+  bio?: string;
 }
 
 // Featured Image Interface
 export interface FeaturedImage {
   url: string;
   key: string;
+  alt?: string;
 }
 
 // Blog Metadata Interface
 export interface BlogMetadata {
   seoTitle?: string;
   seoDescription?: string;
+}
+
+// Medical review (E-E-A-T) Interface
+export interface BlogMedicalReview {
+  reviewedBy?: string;
+  credentialLine?: string;
+  reviewedAt?: string | null;
 }
 
 // Main Blog Interface
@@ -38,6 +47,8 @@ export interface Blog {
   publishedAt: string | null;
   views: number;
   metadata: BlogMetadata;
+  medicalReview?: BlogMedicalReview;
+  faqs?: { question: string; answer: string }[];
   createdAt: string;
   updatedAt: string;
 }
@@ -103,17 +114,20 @@ export interface BlogFilters {
 // Blog Form Data Interface (for creating/updating)
 export interface BlogFormData {
   title: string;
+  slug?: string;
   excerpt: string;
   content: string;
   featuredImage?: File | null;
   featuredImageUrl?: string;
   featuredImageKey?: string;
+  featuredImageAlt?: string;
   author: {
     name: string;
     avatar?: File | null;
     avatarUrl?: string;
     avatarKey?: string;
     title?: string;
+    bio?: string;
   };
   tags: string[];
   status: 'draft' | 'published';
@@ -122,6 +136,12 @@ export interface BlogFormData {
     seoTitle?: string;
     seoDescription?: string;
   };
+  medicalReview?: {
+    reviewedBy?: string;
+    credentialLine?: string;
+    reviewedAt?: string | null;
+  };
+  faqs?: { question: string; answer: string }[];
 }
 
 // Zod Validation Schemas
@@ -154,7 +174,7 @@ const authorSchema = z.object({
 const metadataSchema = z.object({
   seoTitle: z
     .string()
-    .max(60, 'SEO title cannot exceed 60 characters')
+    .max(70, 'SEO title cannot exceed 70 characters')
     .optional(),
   seoDescription: z
     .string()
@@ -168,6 +188,11 @@ export const blogFormSchema = z.object({
     .string()
     .min(5, 'Title must be at least 5 characters')
     .max(200, 'Title cannot exceed 200 characters'),
+  slug: z
+    .string()
+    .max(100, 'Slug cannot exceed 100 characters')
+    .regex(/^[a-z0-9-]*$/, 'Use lowercase letters, numbers and hyphens only')
+    .optional(),
   excerpt: z
     .string()
     .min(20, 'Excerpt must be at least 20 characters')
@@ -198,6 +223,10 @@ export const blogFormSchema = z.object({
     .optional(),
   featuredImageUrl: z.string().url().optional(),
   featuredImageKey: z.string().optional(),
+  featuredImageAlt: z
+    .string()
+    .max(160, 'Alt text cannot exceed 160 characters')
+    .optional(),
   author: z.object({
     name: z
       .string()
@@ -229,6 +258,10 @@ export const blogFormSchema = z.object({
     title: z
       .string()
       .max(100, 'Author title cannot exceed 100 characters')
+      .optional(),
+    bio: z
+      .string()
+      .max(600, 'Author bio cannot exceed 600 characters')
       .optional()
   }),
   tags: z
@@ -246,11 +279,13 @@ export type BlogFormValues = z.infer<typeof blogFormSchema>;
 // Create Blog API Payload
 export interface CreateBlogPayload {
   title: string;
+  slug?: string;
   excerpt: string;
   content: string;
-  featuredImage: {
+  featuredImage?: {
     url: string;
     key: string;
+    alt?: string;
   };
   author: {
     name: string;
@@ -259,6 +294,7 @@ export interface CreateBlogPayload {
       key?: string;
     };
     title?: string;
+    bio?: string;
   };
   tags: string[];
   status: 'draft' | 'published';
@@ -267,6 +303,12 @@ export interface CreateBlogPayload {
     seoTitle?: string;
     seoDescription?: string;
   };
+  medicalReview?: {
+    reviewedBy?: string;
+    credentialLine?: string;
+    reviewedAt?: string | null;
+  };
+  faqs?: { question: string; answer: string }[];
 }
 
 // Update Blog API Payload

@@ -35,7 +35,13 @@ api.interceptors.response.use(
       // Only auto-logout if we have a token (i.e., this is an authenticated request)
       // Don't auto-logout on login failures
       const isLoginRequest = error.config?.url?.includes('/auth/login');
-      const hasToken = typeof window !== 'undefined' && localStorage.getItem('token');
+      // Check the cookie too: middleware.ts gates /dashboard on the cookie while
+      // requests are authorized from localStorage. If only the cookie survives,
+      // the dashboard renders but every call 401s — so treat either as a session
+      // to clear, otherwise there is no path back to sign-in.
+      const hasToken =
+        typeof window !== 'undefined' &&
+        (localStorage.getItem('token') || document.cookie.includes('token='));
 
       if (hasToken && !isLoginRequest) {
         // This is an authenticated request that failed - token likely expired

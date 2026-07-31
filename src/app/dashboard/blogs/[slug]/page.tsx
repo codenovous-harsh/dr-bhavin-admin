@@ -107,7 +107,7 @@ export default function BlogDetailPage() {
               <div className="flex flex-col items-center text-center space-y-4">
                 <Avatar className="h-24 w-24">
                   <AvatarImage
-                    src={blog.author.avatar?.url}
+                    src={blog.author.avatar?.url || undefined}
                     alt={blog.author.name}
                   />
                   <AvatarFallback className="text-lg">
@@ -203,13 +203,15 @@ export default function BlogDetailPage() {
           <Card>
             <CardContent className="pt-6">
               {/* Featured Image */}
-              <div className="mb-6 rounded-lg overflow-hidden">
-                <img
-                  src={blog.featuredImage.url}
-                  alt={blog.title}
-                  className="w-full h-auto object-cover"
-                />
-              </div>
+              {blog.featuredImage?.url && (
+                <div className="mb-6 rounded-lg overflow-hidden">
+                  <img
+                    src={blog.featuredImage.url}
+                    alt={blog.title}
+                    className="w-full h-auto object-cover"
+                  />
+                </div>
+              )}
 
               {/* Blog Title */}
               <h1 className="text-4xl font-bold mb-4 leading-tight">

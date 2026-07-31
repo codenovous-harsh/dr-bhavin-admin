@@ -267,12 +267,21 @@ export default function BlogsPage() {
                           <Loader2 className="h-6 w-6 animate-spin" />
                         </div>
                       )}
-                      <img
-                        src={blog.featuredImage.url}
-                        alt={blog.title}
-                        className="h-48 w-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                        onClick={() => router.push(`/dashboard/blogs/${blog.slug}`)}
-                      />
+                      {blog.featuredImage?.url ? (
+                        <img
+                          src={blog.featuredImage.url}
+                          alt={blog.title}
+                          className="h-48 w-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={() => router.push(`/dashboard/blogs/${blog.slug}`)}
+                        />
+                      ) : (
+                        <div
+                          className="flex h-48 w-full cursor-pointer items-center justify-center bg-muted text-xs text-muted-foreground transition-opacity hover:opacity-90"
+                          onClick={() => router.push(`/dashboard/blogs/${blog.slug}`)}
+                        >
+                          No cover image
+                        </div>
+                      )}
                       <CardHeader>
                         <div className="mb-2 flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2">

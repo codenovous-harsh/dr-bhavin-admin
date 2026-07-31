@@ -33,13 +33,27 @@ class BlogService {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await api.post<UploadResponse>('/upload/single', formData, {
+    const response = await api.post('/upload/single', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     });
 
-    return response.data;
+    // Normalise the backend response. The upload endpoint nests the uploaded
+    // file under data.file ({ url, key, location, ... }); flatten it so every
+    // caller can rely on data.url / data.key.
+    const body: any = response.data;
+    const uploaded = body?.data?.file || body?.data || {};
+    return {
+      status: body?.status,
+      message: body?.message,
+      data: {
+        url: uploaded.url || uploaded.location,
+        key: uploaded.key,
+        size: uploaded.size,
+        mimetype: uploaded.mimetype
+      }
+    };
   }
 
   /**
@@ -123,15 +137,18 @@ class BlogService {
    */
   async createBlog(blogData: {
     title: string;
+    slug?: string;
     excerpt: string;
     content: string;
-    featuredImageUrl: string;
-    featuredImageKey: string;
+    featuredImageUrl?: string;
+    featuredImageKey?: string;
+    featuredImageAlt?: string;
     author: {
       name: string;
       avatarUrl?: string;
       avatarKey?: string;
       title?: string;
+      bio?: string;
     };
     tags: string[];
     status: 'draft' | 'published';
@@ -140,17 +157,30 @@ class BlogService {
       seoTitle?: string;
       seoDescription?: string;
     };
+    medicalReview?: {
+      reviewedBy?: string;
+      credentialLine?: string;
+      reviewedAt?: string | null;
+    };
+    faqs?: { question: string; answer: string }[];
   }): Promise<Blog> {
     try {
       // Prepare payload with pre-uploaded URLs
       const payload: CreateBlogPayload = {
         title: blogData.title,
+        ...(blogData.slug ? { slug: blogData.slug } : {}),
         excerpt: blogData.excerpt,
         content: blogData.content,
-        featuredImage: {
-          url: blogData.featuredImageUrl,
-          key: blogData.featuredImageKey
-        },
+        // Only send a featured image if one was uploaded (drafts may omit it).
+        ...(blogData.featuredImageUrl && blogData.featuredImageKey
+          ? {
+              featuredImage: {
+                url: blogData.featuredImageUrl,
+                key: blogData.featuredImageKey,
+                alt: blogData.featuredImageAlt || ''
+              }
+            }
+          : {}),
         author: {
           name: blogData.author.name,
           avatar: blogData.author.avatarUrl && blogData.author.avatarKey
@@ -159,12 +189,15 @@ class BlogService {
                 key: blogData.author.avatarKey
               }
             : undefined,
-          title: blogData.author.title || 'Author'
+          title: blogData.author.title || 'Author',
+          bio: blogData.author.bio || ''
         },
         tags: blogData.tags,
         status: blogData.status,
         isFeatured: blogData.isFeatured,
-        metadata: blogData.metadata
+        metadata: blogData.metadata,
+        medicalReview: blogData.medicalReview,
+        faqs: blogData.faqs
       };
 
       // Create blog
@@ -185,15 +218,18 @@ class BlogService {
     id: string,
     blogData: {
       title?: string;
+      slug?: string;
       excerpt?: string;
       content?: string;
       featuredImageUrl?: string;
       featuredImageKey?: string;
+      featuredImageAlt?: string;
       author?: {
         name?: string;
         avatarUrl?: string;
         avatarKey?: string;
         title?: string;
+        bio?: string;
       };
       tags?: string[];
       status?: 'draft' | 'published';
@@ -202,24 +238,35 @@ class BlogService {
         seoTitle?: string;
         seoDescription?: string;
       };
+      medicalReview?: {
+        reviewedBy?: string;
+        credentialLine?: string;
+        reviewedAt?: string | null;
+      };
+      faqs?: { question: string; answer: string }[];
     }
   ): Promise<Blog> {
     try {
       const payload: UpdateBlogPayload = {};
 
-      // Handle featured image update (only if new URLs are provided)
+      // Handle featured image update (new image and/or alt text)
       if (blogData.featuredImageUrl && blogData.featuredImageKey) {
         payload.featuredImage = {
           url: blogData.featuredImageUrl,
-          key: blogData.featuredImageKey
+          key: blogData.featuredImageKey,
+          alt: blogData.featuredImageAlt ?? ''
         };
+      } else if (blogData.featuredImageAlt !== undefined) {
+        // Alt-only change — the backend merges this into the existing image.
+        payload.featuredImage = { alt: blogData.featuredImageAlt } as any;
       }
 
       // Handle author update
       if (blogData.author && blogData.author.name) {
         payload.author = {
           name: blogData.author.name,
-          title: blogData.author.title
+          title: blogData.author.title,
+          bio: blogData.author.bio
         };
 
         // Include avatar only if new URLs are provided
@@ -233,12 +280,15 @@ class BlogService {
 
       // Add other fields
       if (blogData.title) payload.title = blogData.title;
+      if (blogData.slug) payload.slug = blogData.slug;
       if (blogData.excerpt) payload.excerpt = blogData.excerpt;
       if (blogData.content) payload.content = blogData.content;
       if (blogData.tags) payload.tags = blogData.tags;
       if (blogData.status) payload.status = blogData.status;
       if (blogData.isFeatured !== undefined) payload.isFeatured = blogData.isFeatured;
       if (blogData.metadata) payload.metadata = blogData.metadata;
+      if (blogData.medicalReview) payload.medicalReview = blogData.medicalReview;
+      if (blogData.faqs) payload.faqs = blogData.faqs;
 
       // Update blog
       const response = await api.put<BlogResponse>(`${BLOG_API_URL}/${id}`, payload);
