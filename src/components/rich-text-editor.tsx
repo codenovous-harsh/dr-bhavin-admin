@@ -178,9 +178,10 @@ export function RichTextEditor({
     // The editor mounts asynchronously (dynamic import); wait for its root.
     const timer = setInterval(() => {
       const quill = reactQuillRef.current?.getEditor?.();
-      if (quill?.root) {
-        root = quill.root;
-        root.addEventListener('paste', handlePaste, true);
+      const editorRoot: HTMLElement | undefined = quill?.root;
+      if (editorRoot) {
+        root = editorRoot;
+        editorRoot.addEventListener('paste', handlePaste, true);
         clearInterval(timer);
       }
     }, 200);

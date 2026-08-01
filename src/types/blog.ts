@@ -270,7 +270,21 @@ export const blogFormSchema = z.object({
     .max(10, 'Cannot have more than 10 tags'),
   status: z.enum(['draft', 'published']),
   isFeatured: z.boolean(),
-  metadata: metadataSchema.optional()
+  metadata: metadataSchema.optional(),
+  medicalReview: z
+    .object({
+      reviewedBy: z
+        .string()
+        .max(100, 'Reviewer name cannot exceed 100 characters')
+        .optional(),
+      credentialLine: z
+        .string()
+        .max(120, 'Credential line cannot exceed 120 characters')
+        .optional(),
+      // Bound to a date input, so 'YYYY-MM-DD' or '' when cleared.
+      reviewedAt: z.string().optional()
+    })
+    .optional()
 });
 
 // Type inference from Zod schema
