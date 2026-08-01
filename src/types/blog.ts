@@ -261,7 +261,7 @@ export const blogFormSchema = z.object({
       .optional(),
     bio: z
       .string()
-      .max(600, 'Author bio cannot exceed 600 characters')
+      .max(1000, 'Author bio cannot exceed 1000 characters')
       .optional()
   }),
   tags: z

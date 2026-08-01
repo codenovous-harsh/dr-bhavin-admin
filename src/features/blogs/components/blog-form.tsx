@@ -623,7 +623,7 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
                   name="author.bio"
                   label="Author Bio"
                   placeholder="Short 'About the author' shown at the end of the post"
-                  config={{ rows: 4, maxLength: 600, showCharCount: true }}
+                  config={{ rows: 6, maxLength: 1000, showCharCount: true }}
                 />
 
                 <FormFileUpload
