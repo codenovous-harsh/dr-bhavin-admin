@@ -13,6 +13,7 @@
   <img src="/public/shadcn-dashboard.png" alt="Shadcn Dashboard Cover" style="max-width: 100%; border-radius: 8px;" />
 </div>
 
+
 ## Overview
 
 This is an **admin dashboard starter template** built with **Next.js 16, Shadcn UI, and Tailwind CSS**.
