@@ -97,6 +97,7 @@ export interface SkinAnalysis {
   gender: string;
   ethnicity: string;
   consentGiven?: boolean;
+  researchConsent?: boolean;
   questionnaire: SkinAnalysisQuestionnaire;
   photos: SkinAnalysisPhoto[];
   analysis: SkinAnalysisResult;

@@ -31,6 +31,15 @@ export const navItems: NavItem[] = [
     access: { role: 'admin' },
   },
   {
+    title: 'Enquiries',
+    url: '/dashboard/enquiries',
+    icon: 'post',
+    isActive: false,
+    shortcut: ['e', 'n'],
+    items: [],
+    access: { role: 'editor' },
+  },
+  {
     title: 'AI Prompts',
     url: '/dashboard/prompts',
     icon: 'settings',

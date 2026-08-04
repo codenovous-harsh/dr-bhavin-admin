@@ -201,6 +201,20 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
               </p>
               <p className="text-sm">{formatDate(analysis.createdAt)}</p>
             </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Research use
+              </p>
+              <p
+                className={`text-sm font-medium ${
+                  analysis.researchConsent
+                    ? 'text-green-600'
+                    : 'text-amber-600'
+                }`}
+              >
+                {analysis.researchConsent ? 'Opted in' : 'Opted out'}
+              </p>
+            </div>
           </div>
 
           {analysis.status === 'completed' && analysis.processedAt && (
