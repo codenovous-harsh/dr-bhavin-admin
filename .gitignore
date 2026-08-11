@@ -28,6 +28,8 @@ yarn-error.log*
 # local env files
 .env*
 .env*.local
+# `.env*` also swallowed the example, which is documentation, not a secret.
+!.env.example
 
 # vercel
 .vercel
