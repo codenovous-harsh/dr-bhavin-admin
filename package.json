@@ -7,7 +7,7 @@
     "url": "https://github.com/Kiranism"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3002",
     "build": "next build",
     "pages:build": "opennextjs-cloudflare build && npm run copy-worker",
     "copy-worker": "cp -r .open-next/cloudflare .open-next/assets/_worker && cp .open-next/worker.js .open-next/assets/_worker.js && cp -r .open-next/server-functions .open-next/assets/ && cp -r .open-next/middleware .open-next/assets/ && cp -r .open-next/.build .open-next/assets/ && sed -i.bak 's|\"\\./cloudflare/|\"./_worker/|g' .open-next/assets/_worker.js && rm .open-next/assets/_worker.js.bak",
