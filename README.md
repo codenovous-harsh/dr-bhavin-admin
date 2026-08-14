@@ -3,7 +3,7 @@
 
 <div align="center">Built with the Next.js 16 App Router, Tailwind CSS &amp; Shadcn UI components</div>
 
-<br />
+<br /> 
 
 <div align="center">
   <a href="https://dub.sh/shadcn-dashboard"><strong>View Demo</strong></a>
