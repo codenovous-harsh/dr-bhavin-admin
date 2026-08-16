@@ -34,6 +34,7 @@ const STATUS_STYLES: Record<EnquiryStatus, string> = {
   new: 'text-green-700 bg-green-100',
   contacted: 'text-amber-700 bg-amber-100',
   closed: 'text-muted-foreground bg-muted',
+  spam: 'text-red-700 bg-red-100',
 };
 
 export default function EnquiriesPage() {
@@ -103,6 +104,7 @@ export default function EnquiriesPage() {
                   <th className="px-4 py-3 font-medium">Name</th>
                   <th className="px-4 py-3 font-medium">Email</th>
                   <th className="px-4 py-3 font-medium">Concern</th>
+                  <th className="px-4 py-3 font-medium">Enquired from</th>
                   <th className="px-4 py-3 font-medium">Format</th>
                   <th className="px-4 py-3 font-medium">Clinic</th>
                   <th className="px-4 py-3 font-medium">Notes</th>
@@ -122,6 +124,20 @@ export default function EnquiriesPage() {
                       </a>
                     </td>
                     <td className="px-4 py-3">{e.concern || '—'}</td>
+                    {/* Page the form was submitted from — the treatment or
+                        concern they were reading when they enquired. */}
+                    <td className="max-w-[200px] px-4 py-3">
+                      {e.sourcePath ? (
+                        <span
+                          className="line-clamp-2 text-muted-foreground"
+                          title={e.sourceTitle ? `${e.sourceTitle}\n${e.sourcePath}` : e.sourcePath}
+                        >
+                          {e.sourceTitle || e.sourcePath}
+                        </span>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
                     <td className="px-4 py-3">{e.consultationFormat || '—'}</td>
                     <td className="px-4 py-3">{e.preferredClinic || '—'}</td>
                     <td className="max-w-[240px] px-4 py-3 text-muted-foreground">
@@ -147,6 +163,10 @@ export default function EnquiriesPage() {
                           <SelectItem value="new">New</SelectItem>
                           <SelectItem value="contacted">Contacted</SelectItem>
                           <SelectItem value="closed">Closed</SelectItem>
+                          {/* Auto-set by the backend's bot check. Switch a
+                              false positive back to New — it was never
+                              emailed, so it still needs following up. */}
+                          <SelectItem value="spam">Spam</SelectItem>
                         </SelectContent>
                       </Select>
                     </td>
