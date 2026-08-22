@@ -41,9 +41,6 @@ const nextConfig: NextConfig = {
 
   transpilePackages: ['geist'],
 
-  // Turbopack configuration for Next.js 16+
-  turbopack: {},
-
   experimental: {
     optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
   },
