@@ -1,13 +1,8 @@
 'use client';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger
-} from '@/components/ui/collapsible';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -23,58 +18,36 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
+  SidebarMenuSkeleton,
   SidebarRail
 } from '@/components/ui/sidebar';
 import { UserAvatarProfile } from '@/components/user-avatar-profile';
 import { navItems } from '@/config/nav-config';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useCurrentUser } from '@/hooks/use-current-user';
 import { useFilteredNavItems } from '@/hooks/use-nav';
+import { authService } from '@/services/auth.service';
 import {
-  IconChevronRight,
-  IconChevronsDown,
-  IconLogout
+  IconLogout,
+  IconSelector,
+  IconUserCircle
 } from '@tabler/icons-react';
+import { Loader2 } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import * as React from 'react';
-import { Icons } from '../icons';
-import Image from 'next/image';
-import { authService } from '@/services/auth.service';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Icons } from '../icons';
+
+/** Fixed, uneven widths so the loading rail reads as text without randomness. */
+const SKELETON_WIDTHS = ['72%', '58%', '80%', '64%', '76%', '54%'];
 
 export default function AppSidebar() {
   const pathname = usePathname();
-  const { isOpen } = useMediaQuery();
   const router = useRouter();
-  const filteredItems = useFilteredNavItems(navItems);
-  const [user, setUser] = React.useState<any>(null);
+  const { items, isLoading } = useFilteredNavItems(navItems);
+  const { user } = useCurrentUser();
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
-
-  // Load user from localStorage on mount
-  React.useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        const userData = JSON.parse(storedUser);
-        // Format user data to match expected structure
-        setUser({
-          id: userData.id || userData._id,
-          fullName: userData.name || userData.fullName || 'User',
-          firstName: userData.name?.split(' ')[0] || userData.firstName || 'User',
-          lastName: userData.name?.split(' ')[1] || userData.lastName || '',
-          emailAddresses: [{ emailAddress: userData.email }],
-          imageUrl: userData.avatar || userData.imageUrl || null
-        });
-      } catch (error) {
-        console.error('Failed to parse user data:', error);
-        localStorage.removeItem('user');
-      }
-    }
-  }, []);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -83,99 +56,123 @@ export default function AppSidebar() {
       toast.success('Logged out successfully');
       router.push('/auth/sign-in');
       router.refresh();
-    } catch (error: any) {
-      console.error('Logout error:', error);
-      toast.error(error?.message || 'Failed to logout');
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to logout';
+      toast.error(message);
     } finally {
       setIsLoggingOut(false);
     }
   };
 
-  React.useEffect(() => {
-    // Side effects based on sidebar state changes
-  }, [isOpen]);
-
   return (
     <Sidebar collapsible='icon'>
+      {/*
+        Brand lockup: public/assets/Full.png, the same file in both themes.
+
+        It is transparent apart from the teal mark and its pale halo, so it sits
+        on the light and dark sidebar alike with no background panel.
+
+        The supplied file was a 2001x2001 canvas with the 2.49:1 lockup using
+        only 1572x631 of it — sizing by height would have scaled the empty
+        padding rather than the mark. It is trimmed to its ink and resized to
+        640px wide; `images.unoptimized` is true for the Cloudflare/OpenNext
+        target, so whatever sits here is what every visitor downloads. The
+        untouched original is in docs/brand/Full-original.png.
+      */}
       <SidebarHeader>
-        <div className='flex items-center justify-center p-4'>
+        <Link
+          href='/dashboard/overview'
+          className='flex flex-col items-center rounded-md px-1 py-1'
+        >
+          {/* Expanded: the lockup. Collapsed: the BG monogram — a 2.49:1
+              wordmark cannot be read in a 3.5rem rail. Both are transparent
+              single-colour teal artwork, so the pale starburst is the same ink
+              at low alpha and recedes on dark while the letters hold. */}
           <Image
-            src='/assets/dashboardLogo.svg'
-            alt='Bhavin Garara'
-            width={180}
-            height={60}
-            className='h-12 w-auto object-contain'
+            src='/assets/Full.png'
+            alt='Dr Bhavin Garara'
+            width={640}
+            height={257}
+            // ~56px tall / ~140px wide: roughly one nav row in height, so the
+            // header reads as branding rather than dominating the rail. Full
+            // sidebar width made it ~96px tall and top-heavy.
+            className='h-14 w-auto object-contain group-data-[collapsible=icon]:hidden'
             priority
           />
-        </div>
+          <Image
+            src='/assets/monogram-new.png'
+            alt='Dr Bhavin Garara'
+            width={256}
+            height={256}
+            // 32px in the 40px rail button: this mark carries the BG letters
+            // and a starburst, so it needs more room than the old flat emblem
+            // to stay legible.
+            className='hidden size-8 shrink-0 object-contain group-data-[collapsible=icon]:block'
+            priority
+          />
+          <span className='sr-only'>Go to dashboard</span>
+        </Link>
       </SidebarHeader>
+
       <SidebarContent className='overflow-x-hidden'>
         <SidebarGroup>
-          <SidebarGroupLabel className='text-muted-foreground mb-2 px-2 text-xs font-semibold'>
-            MAIN MENU
-          </SidebarGroupLabel>
+          <SidebarGroupLabel>Main menu</SidebarGroupLabel>
           <SidebarMenu>
-            {filteredItems.map((item) => {
-              const Icon = item.icon ? Icons[item.icon] : Icons.logo;
-              return item?.items && item?.items?.length > 0 ? (
-                <Collapsible
-                  key={item.title}
-                  asChild
-                  defaultOpen={item.isActive}
-                  className='group/collapsible'
-                >
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuButton
-                        tooltip={item.title}
-                        isActive={pathname === item.url}
-                        size='lg'
-                        className='h-12 text-sm font-medium'
-                      >
-                        {item.icon && <Icon className='h-5 w-5' />}
-                        <span className='text-sm'>{item.title}</span>
-                        <IconChevronRight className='ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
-                      </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {item.items?.map((subItem) => (
-                          <SidebarMenuSubItem key={subItem.title}>
-                            <SidebarMenuSubButton
-                              asChild
-                              isActive={pathname === subItem.url}
-                              className='h-10 text-sm'
-                            >
-                              <Link href={subItem.url}>
-                                <span>{subItem.title}</span>
-                              </Link>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
+            {isLoading
+              ? // Every nav item is role-gated, so until the role resolves the
+                // filter matches nothing. Hold the shape rather than flashing
+                // an empty rail.
+                //
+                // Widths are a fixed sequence, not random: they render on the
+                // server too, so anything non-deterministic here is a hydration
+                // mismatch.
+                SKELETON_WIDTHS.map((width, i) => (
+                  <SidebarMenuItem key={i}>
+                    <SidebarMenuSkeleton showIcon width={width} />
                   </SidebarMenuItem>
-                </Collapsible>
-              ) : (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    tooltip={item.title}
-                    isActive={pathname === item.url}
-                    size='lg'
-                    className='h-12 text-sm font-medium'
-                  >
-                    <Link href={item.url} className='flex items-center'>
-                      <Icon className='mr-3 h-5 w-5' />
-                      <span className='text-sm'>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              );
-            })}
+                ))
+              : items.map((item) => {
+                  const Icon = item.icon ? Icons[item.icon] : Icons.logo;
+                  const isActive =
+                    pathname === item.url || pathname.startsWith(`${item.url}/`);
+
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        asChild
+                        tooltip={item.title}
+                        isActive={isActive}
+                        size='lg'
+                        // Two things:
+                        //  - Active item wears the brand accent. The cva default
+                        //    is `bg-sidebar-accent` (a neutral wash); under an
+                        //    accent-only palette the active row is one of the
+                        //    few places teal earns its keep.
+                        //  - Collapsed: a 40px square that exactly fills the
+                        //    3.5rem rail's content box, so the glyph lands dead
+                        //    centre. `size-10!` has to out-specify the cva
+                        //    base's `size-8!`.
+                        className='data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!'
+                      >
+                        <Link href={item.url}>
+                          {/* No margin on the icon: the button's own `gap-2`
+                              spaces it from the label, and that gap collapses
+                              with the label. A fixed `mr-3` here is what pushed
+                              the glyph off-centre in the collapsed rail. */}
+                          <Icon className='size-5 shrink-0' />
+                          <span className='truncate group-data-[collapsible=icon]:hidden'>
+                            {item.title}
+                          </span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
+
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -183,46 +180,53 @@ export default function AppSidebar() {
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                   size='lg'
-                  className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
+                  tooltip={user?.fullName ?? 'Account'}
+                  className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!'
                 >
-                  {user && (
-                    <UserAvatarProfile
-                      className='h-8 w-8 rounded-lg'
-                      showInfo
-                      user={user}
-                    />
-                  )}
-                  <IconChevronsDown className='ml-auto size-4' />
+                  <UserAvatarProfile
+                    className='size-7 shrink-0 rounded-md'
+                    showInfo
+                    user={user}
+                  />
+                  <IconSelector className='ml-auto size-4 shrink-0 group-data-[collapsible=icon]:hidden' />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className='w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg'
-                side='bottom'
+                className='min-w-56 rounded-lg'
+                side='right'
                 align='end'
-                sideOffset={4}
+                sideOffset={8}
               >
                 <DropdownMenuLabel className='p-0 font-normal'>
-                  <div className='px-1 py-1.5'>
-                    {user && (
-                      <UserAvatarProfile
-                        className='h-8 w-8 rounded-lg'
-                        showInfo
-                        user={user}
-                      />
-                    )}
+                  <div className='flex items-center gap-2 px-1 py-1.5'>
+                    <UserAvatarProfile
+                      className='size-8 rounded-md'
+                      showInfo
+                      user={user}
+                    />
                   </div>
                 </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {/* The account page holds the only change-password entry
+                    point and was previously unreachable — no nav item, no
+                    menu link. */}
+                <DropdownMenuItem asChild>
+                  <Link href='/dashboard/profile'>
+                    <IconUserCircle className='mr-2 size-4' />
+                    Account
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut}>
                   {isLoggingOut ? (
                     <>
-                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                      Signing out...
+                      <Loader2 className='mr-2 size-4 animate-spin' />
+                      Signing out…
                     </>
                   ) : (
                     <>
-                      <IconLogout className='mr-2 h-4 w-4' />
-                      Sign Out
+                      <IconLogout className='mr-2 size-4' />
+                      Sign out
                     </>
                   )}
                 </DropdownMenuItem>
@@ -231,6 +235,7 @@ export default function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
+
       <SidebarRail />
     </Sidebar>
   );

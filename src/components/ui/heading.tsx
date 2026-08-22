@@ -1,29 +1,33 @@
 import React from 'react';
-import { InfoButton } from '@/components/ui/info-button';
-import type { InfobarContent } from '@/components/ui/infobar';
 
 interface HeadingProps {
   title: string;
-  description: string;
-  infoContent?: InfobarContent;
+  description?: string;
 }
 
+/**
+ * The page title.
+ *
+ * Renders `<h1>` — pages across the app used `<h2>` as their top-level heading
+ * with no `<h1>` anywhere, at 13 different size/weight combinations. This is the
+ * one canonical treatment; don't hand-roll page titles alongside it.
+ */
 export const Heading: React.FC<HeadingProps> = ({
   title,
-  description,
-  infoContent
+  description
 }) => {
+  if (!title && !description) return null;
+
   return (
-    <div>
+    <div className='min-w-0 space-y-1'>
       <div className='flex items-center gap-2'>
-        <h2 className='text-3xl font-bold tracking-tight'>{title}</h2>
-        {infoContent && (
-          <div className='pt-1'>
-            <InfoButton content={infoContent} />
-          </div>
-        )}
+        <h1 className='truncate text-2xl font-semibold tracking-tight'>
+          {title}
+        </h1>
       </div>
-      <p className='text-muted-foreground text-sm'>{description}</p>
+      {description && (
+        <p className='text-muted-foreground text-sm'>{description}</p>
+      )}
     </div>
   );
 };

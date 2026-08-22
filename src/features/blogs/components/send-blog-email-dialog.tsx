@@ -33,6 +33,9 @@ export default function SendBlogEmailDialog({
   blogTitle,
 }: SendBlogEmailDialogProps) {
   const [contacts, setContacts] = useState<Contact[]>([]);
+  // True number of subscribers, from the server. The picker below only holds
+  // one page, so `contacts.length` is not the audience size.
+  const [subscriberTotal, setSubscriberTotal] = useState(0);
   const [loadingContacts, setLoadingContacts] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -52,8 +55,17 @@ export default function SendBlogEmailDialog({
   const loadContacts = async () => {
     setLoadingContacts(true);
     try {
-      const result = await contactService.list({ limit: 500, subscribedOnly: true });
+      // List endpoints cap `limit` server-side (utils/query MAX_LIMIT), so this
+      // is one page for the picker — not the whole audience. "Send to all" is
+      // resolved server-side from `includeAllContacts`, so the send is complete
+      // regardless of what's loaded here; only the displayed counts need the
+      // real total, which comes from the pagination envelope.
+      const result = await contactService.list({
+        limit: 100,
+        subscribedOnly: true
+      });
       setContacts(result.contacts);
+      setSubscriberTotal(result.pagination.total ?? result.contacts.length);
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to load contacts');
     } finally {
@@ -101,7 +113,7 @@ export default function SendBlogEmailDialog({
   }, [extraEmails]);
 
   const totalSelected = includeAll
-    ? contacts.length + adHocCount
+    ? subscriberTotal + adHocCount
     : selectedIds.size + adHocCount;
 
   const handleSend = async () => {
@@ -148,7 +160,7 @@ export default function SendBlogEmailDialog({
             <div className="flex items-center justify-between">
               <Label>Contact list</Label>
               <Badge variant="outline">
-                {includeAll ? `All ${contacts.length}` : `${selectedIds.size} selected`}
+                {includeAll ? `All ${subscriberTotal}` : `${selectedIds.size} selected`}
               </Badge>
             </div>
 
@@ -159,9 +171,16 @@ export default function SendBlogEmailDialog({
                 onCheckedChange={(v) => setIncludeAll(!!v)}
               />
               <Label htmlFor="include-all" className="cursor-pointer text-sm font-normal">
-                Send to all subscribed contacts ({contacts.length})
+                Send to all subscribed contacts ({subscriberTotal})
               </Label>
             </div>
+
+            {!includeAll && subscriberTotal > contacts.length && (
+              <p className="text-muted-foreground text-xs">
+                Showing the first {contacts.length} of {subscriberTotal}{' '}
+                subscribers. Use &ldquo;Send to all&rdquo; to reach everyone.
+              </p>
+            )}
 
             {!includeAll && (
               <div className="border rounded-md">

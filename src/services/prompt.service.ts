@@ -16,8 +16,32 @@ interface ApiEnvelope<T> {
 }
 
 class PromptService {
-  async list(name = 'skin-analysis'): Promise<PromptTemplate[]> {
-    const res = await api.get<ApiEnvelope<PromptTemplate[]>>(BASE, { params: { name } });
+  /**
+   * Paginated prompt versions. The endpoint now returns
+   * { items, pagination } instead of a bare array.
+   */
+  async list(params: {
+    name?: string;
+    status?: string;
+    search?: string;
+    sortBy?: string;
+    page?: number;
+    limit?: number;
+  } = {}): Promise<{
+    items: PromptTemplate[];
+    pagination: { page: number; limit: number; total: number; totalPages: number };
+  }> {
+    const res = await api.get<
+      ApiEnvelope<{
+        items: PromptTemplate[];
+        pagination: {
+          page: number;
+          limit: number;
+          total: number;
+          totalPages: number;
+        };
+      }>
+    >(BASE, { params: { name: 'skin-analysis', ...params } });
     return res.data.data;
   }
 

@@ -88,7 +88,7 @@ export default function StudyView({ studyId }: { studyId: string }) {
       </div>
 
       {missing.length > 0 && (
-        <div className='rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200'>
+        <div className='rounded-md border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-foreground'>
           <p className='font-medium'>This study cannot be published yet.</p>
           <p className='mt-1'>Missing: {missing.join(', ')}.</p>
         </div>

@@ -59,17 +59,17 @@ export function RecentSales() {
     return (
       <Card className='h-full animate-pulse'>
         <CardHeader>
-          <div className='h-6 w-48 bg-gray-200 rounded'></div>
-          <div className='h-4 w-64 bg-gray-200 rounded mt-2'></div>
+          <div className='h-6 w-48 bg-muted rounded'></div>
+          <div className='h-4 w-64 bg-muted rounded mt-2'></div>
         </CardHeader>
         <CardContent>
           <div className='space-y-4'>
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className='flex items-center gap-4'>
-                <div className='h-9 w-9 bg-gray-200 rounded-full'></div>
+                <div className='h-9 w-9 bg-muted rounded-full'></div>
                 <div className='space-y-2 flex-1'>
-                  <div className='h-4 w-32 bg-gray-200 rounded'></div>
-                  <div className='h-3 w-48 bg-gray-200 rounded'></div>
+                  <div className='h-4 w-32 bg-muted rounded'></div>
+                  <div className='h-3 w-48 bg-muted rounded'></div>
                 </div>
               </div>
             ))}
@@ -80,7 +80,7 @@ export function RecentSales() {
   }
 
   return (
-    <Card className='h-full'>
+    <Card className='flex h-full flex-col'>
       <CardHeader>
         <CardTitle>Recent Submissions</CardTitle>
         <CardDescription>

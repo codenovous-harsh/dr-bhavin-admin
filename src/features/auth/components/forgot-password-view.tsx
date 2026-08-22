@@ -58,14 +58,20 @@ export default function ForgotPasswordView() {
               background: `radial-gradient(circle, #27A48C 0%, transparent 70%)`
             }}
           />
-          <div className='relative z-20 rounded-3xl bg-white p-12 shadow-2xl'>
+          <div className='relative z-20 flex flex-col items-center gap-4 text-center'>
+            {/* The cream lockup already carries the practice name, so a
+                separate heading would repeat it — only the context line
+                survives. It ships pre-coloured for a dark ground (#F5EBE0), so
+                unlike the monogram it needs no brightness-0/invert filter. */}
             <Image
-              src='/assets/bhavinLogo.svg'
-              alt='Bhavin Garara'
-              width={400}
-              height={120}
-              className='h-24 w-auto'
+              src='/assets/logo-cream.png'
+              alt='Dr Bhavin Garara'
+              width={640}
+              height={257}
+              className='w-72 max-w-full object-contain drop-shadow-lg'
+              priority
             />
+            <p className='text-sm text-white/70'>Clinic administration</p>
           </div>
         </div>
       </div>
@@ -86,7 +92,7 @@ export default function ForgotPasswordView() {
             {sent ? (
               <CardContent className='space-y-4'>
                 <div className='flex flex-col items-center space-y-3 py-4'>
-                  <CheckCircle2 className='h-12 w-12 text-[#27A48C]' />
+                  <CheckCircle2 className='h-12 w-12 text-primary' />
                   <p className='text-muted-foreground text-center text-sm'>
                     The link expires in 30 minutes. Didn't get it? Check your
                     spam folder or try again.
@@ -105,7 +111,7 @@ export default function ForgotPasswordView() {
                 </Button>
                 <Link
                   href='/auth/sign-in'
-                  className='block text-center text-sm font-medium text-[#27A48C] hover:underline'
+                  className='block text-center text-sm font-medium text-primary hover:underline'
                 >
                   Back to sign in
                 </Link>
@@ -121,7 +127,7 @@ export default function ForgotPasswordView() {
                       placeholder='you@example.com'
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className='focus:border-[#27A48C] focus:ring-[#27A48C]'
+                     
                       disabled={isLoading}
                       required
                     />
@@ -130,9 +136,6 @@ export default function ForgotPasswordView() {
                     type='submit'
                     className='w-full'
                     disabled={isLoading}
-                    style={{
-                      background: `linear-gradient(135deg, #27A48C 0%, #0F3E35 100%)`
-                    }}
                   >
                     {isLoading ? (
                       <>
@@ -145,7 +148,7 @@ export default function ForgotPasswordView() {
                   </Button>
                   <Link
                     href='/auth/sign-in'
-                    className='block text-center text-sm font-medium text-[#27A48C] hover:underline'
+                    className='block text-center text-sm font-medium text-primary hover:underline'
                   >
                     Back to sign in
                   </Link>

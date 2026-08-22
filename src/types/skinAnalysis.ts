@@ -85,6 +85,33 @@ export interface SkinAnalysisResult {
   tier2?: string;
 }
 
+// Per-phase timings for the analysis job, recorded by the backend on both the
+// completed and failed paths. Every field is optional: records created before
+// the field existed have none, and a job whose process died mid-run never got
+// to write its own figures.
+//
+// Note these measure the JOB, not the patient's wait — the R2 photo upload
+// happens before the job starts, so `createdAt` → `processedAt` will read
+// longer than `totalMs`.
+export interface SkinAnalysisTimings {
+  startedAt?: string | null;
+  /** Fetching photos back from R2 and base64-encoding them. */
+  photoLoadMs?: number | null;
+  /** The Claude call, request through to final streamed message. */
+  aiMs?: number | null;
+  /** Time to first streamed token — thinking time vs writing time. */
+  firstTokenMs?: number | null;
+  /** Whole job, start to terminal state. */
+  totalMs?: number | null;
+  photoCount?: number | null;
+  inputTokens?: number | null;
+  outputTokens?: number | null;
+  /** Near zero means the large system prompt missed the cache. */
+  cacheReadTokens?: number | null;
+  model?: string;
+  promptVersion?: string;
+}
+
 // Main Skin Analysis Interface
 export interface SkinAnalysis {
   _id: string;
@@ -104,6 +131,7 @@ export interface SkinAnalysis {
   status: 'pending' | 'processing' | 'completed' | 'failed';
   error?: string;
   processedAt?: string;
+  timings?: SkinAnalysisTimings;
   createdAt: string;
   updatedAt: string;
   // Virtual derived from firstName + lastName when fullName field is empty.
@@ -135,10 +163,14 @@ export interface SkinAnalysisListResponse {
   data: {
     analyses: SkinAnalysis[];
     pagination: {
-      currentPage: number;
-      totalPages: number;
-      totalAnalyses: number;
+      // Normalised envelope shared by every list endpoint.
+      page: number;
       limit: number;
+      total: number;
+      totalPages: number;
+      // Legacy keys, still returned for older callers.
+      currentPage: number;
+      totalAnalyses: number;
       hasNextPage: boolean;
       hasPrevPage: boolean;
     };

@@ -11,6 +11,26 @@ import type {
 
 const SKIN_ANALYSIS_API_URL = '/skin-analysis';
 
+export interface SubmissionTrendPoint {
+  label: string;
+  year: number;
+  week: number;
+  total: number;
+  completed: number;
+  pending: number;
+  failed: number;
+}
+
+export interface SubmissionTrends {
+  points: SubmissionTrendPoint[];
+  delta: {
+    current: number;
+    previous: number;
+    /** null when there is no prior period to compare against. */
+    changePct: number | null;
+  };
+}
+
 class SkinAnalysisService {
   /**
    * Submit skin analysis with photos and questionnaire
@@ -138,6 +158,18 @@ class SkinAnalysisService {
     );
 
     return response.data;
+  }
+
+  /**
+   * Weekly submission trends (zero-filled) plus a real 7-day-over-7-day delta.
+   */
+  async getSubmissionTrends(weeks = 6): Promise<SubmissionTrends> {
+    const response = await api.get<{ data: SubmissionTrends }>(
+      `${SKIN_ANALYSIS_API_URL}/stats/trends`,
+      { params: { weeks } }
+    );
+
+    return response.data.data;
   }
 }
 

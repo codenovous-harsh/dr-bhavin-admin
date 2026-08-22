@@ -1,49 +1,28 @@
-import {
-  Geist,
-  Geist_Mono,
-  Instrument_Sans,
-  Inter,
-  Mulish,
-  Noto_Sans_Mono
-} from 'next/font/google';
+import { Geist_Mono, Inter } from 'next/font/google';
 
 import { cn } from '@/lib/utils';
 
-const fontSans = Geist({
+/**
+ * Two families, both actually used.
+ *
+ * This previously loaded six (Geist, Geist Mono, Instrument Sans, Noto Sans
+ * Mono, Mulish, Inter) while only the sans and mono utilities were ever
+ * referenced — four families were downloaded on every page load for nothing.
+ *
+ * The variable names here are consumed by `@theme inline` in globals.css:
+ *   --font-inter      -> --font-sans
+ *   --font-geist-mono -> --font-mono
+ */
+const fontSans = Inter({
   subsets: ['latin'],
-  variable: '--font-sans'
+  display: 'swap',
+  variable: '--font-inter'
 });
 
 const fontMono = Geist_Mono({
   subsets: ['latin'],
-  variable: '--font-mono'
+  display: 'swap',
+  variable: '--font-geist-mono'
 });
 
-const fontInstrument = Instrument_Sans({
-  subsets: ['latin'],
-  variable: '--font-instrument'
-});
-
-const fontNotoMono = Noto_Sans_Mono({
-  subsets: ['latin'],
-  variable: '--font-noto-mono'
-});
-
-const fontMullish = Mulish({
-  subsets: ['latin'],
-  variable: '--font-mullish'
-});
-
-const fontInter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter'
-});
-
-export const fontVariables = cn(
-  fontSans.variable,
-  fontMono.variable,
-  fontInstrument.variable,
-  fontNotoMono.variable,
-  fontMullish.variable,
-  fontInter.variable
-);
+export const fontVariables = cn(fontSans.variable, fontMono.variable);

@@ -20,23 +20,25 @@ import {
 } from '@/components/ui/chart';
 import dashboardService from '@/services/dashboard.service';
 
+/**
+ * Completed / Pending / Failed encode STATE, not series identity, so they wear
+ * the reserved status tokens rather than categorical slots — a status colour
+ * must never impersonate a series. Each slice is labelled, which is also the
+ * mitigation for `warning` sitting below 3:1 on the light surface.
+ */
 const chartConfig = {
-  value: {
-    label: 'Submissions'
-  },
-  completed: {
-    label: 'Completed',
-    color: 'hsl(142, 76%, 36%)' // green
-  },
-  pending: {
-    label: 'Pending',
-    color: 'hsl(48, 96%, 53%)' // yellow
-  },
-  failed: {
-    label: 'Failed',
-    color: 'hsl(0, 84%, 60%)' // red
-  }
+  value: { label: 'Submissions' },
+  Completed: { label: 'Completed', color: 'var(--success)' },
+  Pending: { label: 'Pending', color: 'var(--warning)' },
+  Failed: { label: 'Failed', color: 'var(--critical)' }
 } satisfies ChartConfig;
+
+const STATUS_FILL: Record<string, string> = {
+  Completed: 'var(--success)',
+  Pending: 'var(--warning)',
+  Failed: 'var(--critical)',
+  Processing: 'var(--serious)'
+};
 
 export function PieGraph() {
   const [chartData, setChartData] = React.useState<any[]>([]);
@@ -70,11 +72,11 @@ export function PieGraph() {
     return (
       <Card className='@container/card animate-pulse'>
         <CardHeader>
-          <div className='h-6 w-48 bg-gray-200 rounded'></div>
-          <div className='h-4 w-64 bg-gray-200 rounded mt-2'></div>
+          <div className='h-6 w-48 bg-muted rounded'></div>
+          <div className='h-4 w-64 bg-muted rounded mt-2'></div>
         </CardHeader>
         <CardContent>
-          <div className='h-[250px] bg-gray-200 rounded'></div>
+          <div className='h-[250px] bg-muted rounded'></div>
         </CardContent>
       </Card>
     );
@@ -108,29 +110,6 @@ export function PieGraph() {
           className='mx-auto aspect-square h-[250px]'
         >
           <PieChart>
-            <defs>
-              {chartData.map((item, index) => (
-                <linearGradient
-                  key={item.name}
-                  id={`fill${item.name}`}
-                  x1='0'
-                  y1='0'
-                  x2='0'
-                  y2='1'
-                >
-                  <stop
-                    offset='0%'
-                    stopColor={item.fill}
-                    stopOpacity={0.9}
-                  />
-                  <stop
-                    offset='100%'
-                    stopColor={item.fill}
-                    stopOpacity={0.7}
-                  />
-                </linearGradient>
-              ))}
-            </defs>
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent hideLabel />}
@@ -138,13 +117,15 @@ export function PieGraph() {
             <Pie
               data={chartData.map((item) => ({
                 ...item,
-                fill: `url(#fill${item.name})`
+                fill: STATUS_FILL[item.name] ?? 'var(--muted-foreground)'
               }))}
               dataKey='value'
               nameKey='name'
               innerRadius={60}
+              // 2px surface-coloured ring so adjacent slices stay separable
+              // without relying on hue alone.
               strokeWidth={2}
-              stroke='var(--background)'
+              stroke='var(--card)'
             >
               <Label
                 content={({ viewBox }) => {
@@ -182,7 +163,7 @@ export function PieGraph() {
       <CardFooter className='flex-col gap-2 text-sm'>
         <div className='flex items-center gap-2 leading-none font-medium'>
           {completedPercentage}% successfully completed{' '}
-          <IconCircleCheck className='h-4 w-4 text-green-600' />
+          <IconCircleCheck className='h-4 w-4 text-success' />
         </div>
         <div className='text-muted-foreground leading-none'>
           Real-time submission status

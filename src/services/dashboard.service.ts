@@ -1,5 +1,9 @@
-import skinAnalysisService from './skinAnalysis.service';
+import skinAnalysisService, {
+  type SubmissionTrends
+} from './skinAnalysis.service';
 import blogService from './blog.service';
+
+export type { SubmissionTrends };
 
 export interface DashboardStats {
   skinAnalysis: {
@@ -152,6 +156,14 @@ class DashboardService {
         totalViews: 0,
       };
     }
+  }
+
+  /**
+   * Weekly submission trends, zero-filled, plus a real 7-day-over-7-day delta.
+   * Backed by GET /api/skin-analysis/stats/trends (admin+).
+   */
+  async getSubmissionTrends(weeks = 6): Promise<SubmissionTrends> {
+    return skinAnalysisService.getSubmissionTrends(weeks);
   }
 }
 

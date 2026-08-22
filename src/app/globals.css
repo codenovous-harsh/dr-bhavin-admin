@@ -6,45 +6,88 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@import './theme.css';
-@import './theme-custom.css';
-@import './theme-radial-gradient.css';
-@import './theme-green.css';
-@import './theme-sidebar.css';
+/* ============================================================================
+   Dr Bhavin Garara — Admin theme
+   ----------------------------------------------------------------------------
+   ONE stylesheet. This replaces the previous five (theme.css, theme-custom.css,
+   theme-green.css, theme-radial-gradient.css, theme-sidebar.css), which fought
+   each other through !important and were partly dead: theme-custom.css defined a
+   full teal token set that globals.css silently overrode, so none of it ever
+   rendered.
+
+   Palette strategy: ACCENT ONLY. Surfaces stay neutral (shadcn's near-black /
+   white) so dense tables and long-form text stay legible; brand teal carries
+   primary actions, active nav, focus rings and the first chart slot.
+
+   Brand tokens mirror the website's design system
+   (Bhavin-Garara/src/app/globals.css). Do not swap #0e7a63 back to the brand
+   #27a48c for text or button fills on light — the brand teal is only 3.10:1 on
+   white and fails WCAG AA for label-size text. Every ratio below is measured,
+   not estimated.
+   ============================================================================ */
 
 :root {
   --radius: 0.625rem;
+
+  /* Neutral surfaces — unchanged shadcn defaults */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+
+  /* Brand accent — #0e7a63 carries white text at 5.27:1 (AA).
+     Hover step #154a41 measures 10.06:1. */
+  --primary: #0e7a63;
+  --primary-foreground: #ffffff;
+
+  /* Focus ring is a non-text mark, so the 3:1 bar applies: brand teal is 3.10:1
+     on white. This is the one light-mode role that wears the true brand hex. */
+  --ring: #27a48c;
+
+  --destructive: #d03b3b;
+
+  /* Chart slots — categorical identity, fixed order, never cycled.
+     Selected by enumerating orderings against the dataviz six checks on this
+     exact surface (#ffffff). Worst adjacent CVD ΔE 18.7, normal-vision ΔE 19.3,
+     all five ≥ 3:1. Do not reorder: the order IS the colourblind-safety
+     mechanism. */
+  --chart-1: #27a48c; /* brand teal */
+  --chart-2: #2a78d6; /* blue */
+  --chart-3: #eb6834; /* orange */
+  --chart-4: #4a3aa7; /* violet */
+  --chart-5: #e34948; /* red */
+
+  /* Status — reserved meaning, never reused as a series colour. Always shipped
+     with an icon or text label: on white, warning (1.83:1) and serious (2.64:1)
+     are sub-3:1 by design and the label is the mitigation. */
+  --success: #0ca30c;
+  --success-foreground: #0a0a0a; /* 5.90:1 — white ink would be 3.35:1 */
+  --warning: #fab219;
+  --warning-foreground: #0a0a0a;
+  --serious: #ec835a;
+  --serious-foreground: #0a0a0a;
+  --critical: #d03b3b;
+  --critical-foreground: #ffffff;
+
+  /* Sidebar — neutral surface, teal only on the active item */
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: #0e7a63;
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-ring: #27a48c;
 }
 
 .dark {
@@ -54,38 +97,62 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.269 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
   --accent: oklch(0.371 0 0);
   --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
+
+  /* On dark the true brand teal is the fill and the ink goes dark — 6.39:1 (AA).
+     Same hue as light mode; only the lightness role flips. */
+  --primary: #27a48c;
+  --primary-foreground: #0a0a0a;
+
+  --ring: #27a48c; /* 6.39:1 on the dark ground */
+
+  --destructive: #e66767;
+
+  /* Same five hues as light, re-stepped for the dark surface (#171717) — not an
+     automatic flip. Worst adjacent CVD ΔE 17.0, normal-vision ΔE 17.9,
+     all five ≥ 3:1. */
+  --chart-1: #27a48c;
+  --chart-2: #3987e5;
+  --chart-3: #d95926;
+  --chart-4: #9085e9;
+  --chart-5: #e66767;
+
+  /* Status steps are mode-invariant; all four clear 3:1 on the dark surface. */
+  --success: #0ca30c;
+  --success-foreground: #0a0a0a;
+  --warning: #fab219;
+  --warning-foreground: #0a0a0a;
+  --serious: #ec835a;
+  --serious-foreground: #0a0a0a;
+  --critical: #d03b3b;
+  --critical-foreground: #ffffff;
+
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: #27a48c;
+  --sidebar-primary-foreground: #0a0a0a;
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.439 0 0);
+  --sidebar-ring: #27a48c;
 }
 
 @theme inline {
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-geist-mono);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -104,11 +171,22 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-serious: var(--serious);
+  --color-serious-foreground: var(--serious-foreground);
+  --color-critical: var(--critical);
+  --color-critical-foreground: var(--critical-foreground);
+
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -126,119 +204,58 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /*
+   * Native form controls.
+   *
+   * A few older forms (skinAnalysis/skin-analysis-form, prompts/patient-picker)
+   * use bare <input>/<select>/<textarea> with no background class, so they would
+   * otherwise paint the UA's white in dark mode. This replaces the previous
+   * `.dark input {…}` shim: it is mode-agnostic — the tokens do the work — and
+   * living in @layer base means any Tailwind utility still overrides it, so
+   * shadcn's own Input/Select are unaffected.
+   */
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not(
+      [type='file']
+    ):not([type='color']),
+  textarea,
+  select {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--muted-foreground);
+  }
+
+  input[type='checkbox'],
+  input[type='radio'] {
+    accent-color: var(--primary);
+  }
 }
 
-/* View Transition Wave Effect */
+/* Theme-toggle wave. ModeToggle sets --x/--y from the click point. */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
 }
-
 ::view-transition-old(root) {
-  /* Ensure the outgoing view (old theme) is beneath */
   z-index: 0;
 }
-
 ::view-transition-new(root) {
-  /* Ensure the incoming view (new theme) is always on top */
   z-index: 1;
+  animation: reveal 0.4s ease-in-out forwards;
 }
 
 @keyframes reveal {
   from {
-    /* Use CSS variables for the origin, defaulting to center if not set */
     clip-path: circle(0% at var(--x, 50%) var(--y, 50%));
     opacity: 0.7;
   }
   to {
-    /* Use CSS variables for the origin, defaulting to center if not set */
     clip-path: circle(150% at var(--x, 50%) var(--y, 50%));
     opacity: 1;
   }
-}
-
-::view-transition-new(root) {
-  /* Apply the reveal animation */
-  animation: reveal 0.4s ease-in-out forwards;
-}
-
-/*
- * Dark-mode rescue for hard-coded Tailwind palette utilities.
- *
- * Several feature components (patients, prompts, blogs, overview, auth) ship
- * with bg-white / bg-gray-* / text-gray-* / text-red-* hard-coded for light
- * mode. In dark mode these become unreadable: white surfaces flash and dark
- * gray text disappears on a near-black background. Rather than rewrite every
- * component, remap the most common utilities to theme tokens (or sensible
- * dark equivalents) when the .dark class is active.
- *
- * This is intentionally narrow — only utilities actually used in the app
- * are remapped, so unaffected pages are unchanged.
- */
-.dark .bg-white {
-  background-color: var(--card);
-  color: var(--card-foreground);
-}
-.dark .bg-gray-50 { background-color: oklch(0.22 0 0); }
-.dark .bg-gray-100 { background-color: oklch(0.25 0 0); }
-.dark .bg-gray-200 { background-color: oklch(0.3 0 0); }
-.dark .bg-gray-300 { background-color: oklch(0.35 0 0); }
-
-.dark .text-black { color: var(--foreground); }
-.dark .text-gray-900 { color: oklch(0.95 0 0); }
-.dark .text-gray-800 { color: oklch(0.92 0 0); }
-.dark .text-gray-700 { color: oklch(0.85 0 0); }
-.dark .text-gray-600 { color: oklch(0.75 0 0); }
-.dark .text-gray-500 { color: oklch(0.7 0 0); }
-.dark .text-gray-400 { color: oklch(0.6 0 0); }
-
-.dark .border-gray-100,
-.dark .border-gray-200,
-.dark .border-gray-300 { border-color: var(--border); }
-
-/* Red status text — keep red hue but lift lightness so it's legible on dark */
-.dark .text-red-500,
-.dark .text-red-600 { color: oklch(0.72 0.18 27); }
-.dark .text-red-700,
-.dark .text-red-800 { color: oklch(0.78 0.16 27); }
-.dark .bg-red-50 { background-color: oklch(0.25 0.05 27); }
-.dark .bg-red-100 { background-color: oklch(0.3 0.07 27); }
-.dark .border-red-200,
-.dark .border-red-300 { border-color: oklch(0.45 0.12 27); }
-
-/* Blue accents used in photo-gallery etc */
-.dark .text-blue-500,
-.dark .text-blue-600 { color: oklch(0.75 0.15 240); }
-.dark .bg-blue-50 { background-color: oklch(0.25 0.05 240); }
-.dark .border-blue-500 { border-color: oklch(0.6 0.18 240); }
-
-/* Yellow/green status indicators */
-.dark .text-yellow-500,
-.dark .text-yellow-600 { color: oklch(0.8 0.16 90); }
-.dark .text-green-500,
-.dark .text-green-600 { color: oklch(0.75 0.16 150); }
-.dark .bg-green-50 { background-color: oklch(0.25 0.05 150); }
-.dark .text-green-700,
-.dark .text-green-800 { color: oklch(0.85 0.14 150); }
-
-/*
- * Native form elements (input, textarea, select) inherit a system-painted
- * background in some browsers that ignores .bg-white remapping. Force
- * dark-mode form elements to use the theme tokens so any element without an
- * explicit Tailwind background class is still legible in dark mode.
- *
- * Components that opt-in to a specific colour (e.g. shadcn Input which sets
- * its own bg) win via Tailwind's higher specificity.
- */
-.dark input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']),
-.dark textarea,
-.dark select {
-  background-color: var(--card);
-  color: var(--card-foreground);
-  border-color: var(--border);
-}
-.dark input::placeholder,
-.dark textarea::placeholder {
-  color: oklch(0.6 0 0);
 }

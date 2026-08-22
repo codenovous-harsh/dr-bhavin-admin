@@ -1,5 +1,18 @@
 import api from './auth.service';
 
+export interface ImportSummary {
+  /** Rows actually inserted. */
+  added: number;
+  /** Emails that were already contacts. */
+  skipped: number;
+  /** Source rows with no usable email address. */
+  invalid: number;
+  /** Extra rows that collapsed into an email already counted. */
+  duplicates: number;
+  /** Unique valid emails found in the source. */
+  total: number;
+}
+
 export interface Contact {
   _id: string;
   email: string;
@@ -34,7 +47,14 @@ export interface BulkAddSummary {
 const URL = '/contacts';
 
 class ContactService {
-  async list(opts?: { page?: number; limit?: number; search?: string; subscribedOnly?: boolean }) {
+  async list(opts?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    subscribedOnly?: boolean;
+    /** '-field' | 'field'. Whitelisted server-side. */
+    sortBy?: string;
+  }) {
     const response = await api.get<ContactListResponse>(URL, { params: opts });
     return response.data.data;
   }
@@ -49,8 +69,18 @@ class ContactService {
     return response.data.data;
   }
 
-  async importPatients(): Promise<BulkAddSummary> {
-    const response = await api.post<{ status: string; data: BulkAddSummary }>(`${URL}/import-patients`);
+  async importPatients(): Promise<ImportSummary> {
+    const response = await api.post<{ status: string; data: ImportSummary }>(
+      `${URL}/import-patients`
+    );
+    return response.data.data;
+  }
+
+  /** Adds everyone who submitted an enquiry. Spam-flagged enquiries are excluded. */
+  async importEnquiries(): Promise<ImportSummary> {
+    const response = await api.post<{ status: string; data: ImportSummary }>(
+      `${URL}/import-enquiries`
+    );
     return response.data.data;
   }
 

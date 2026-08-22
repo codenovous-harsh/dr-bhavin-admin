@@ -39,7 +39,7 @@ export default function AnalysisResultsDisplay({
     'prose-headings:font-semibold prose-headings:text-foreground ' +
     'prose-h1:text-xl prose-h1:mt-8 prose-h1:mb-4 ' +
     'prose-h2:text-lg prose-h2:mt-8 prose-h2:mb-3 prose-h2:pb-2 prose-h2:border-b prose-h2:border-border ' +
-    'prose-h3:text-base prose-h3:font-semibold prose-h3:text-blue-700 dark:prose-h3:text-blue-400 prose-h3:mt-6 prose-h3:mb-2 ' +
+    'prose-h3:text-base prose-h3:font-semibold prose-h3:text-primary dark:prose-h3:text-primary prose-h3:mt-6 prose-h3:mb-2 ' +
     'prose-p:my-3 prose-p:leading-relaxed ' +
     'prose-li:my-1 prose-ul:my-3 prose-ol:my-3 ' +
     'prose-strong:text-foreground prose-strong:font-semibold ' +
@@ -54,7 +54,7 @@ export default function AnalysisResultsDisplay({
             <CardTitle>Determined Skin Type</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold text-blue-600 dark:text-blue-400">
+            <div className="text-2xl font-semibold text-primary">
               {analysis.skinType}
             </div>
           </CardContent>

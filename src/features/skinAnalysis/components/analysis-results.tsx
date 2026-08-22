@@ -33,8 +33,8 @@ export default function AnalysisResults({ analysisId }: AnalysisResultsProps) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your analysis...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading your analysis...</p>
         </div>
       </div>
     );
@@ -43,9 +43,9 @@ export default function AnalysisResults({ analysisId }: AnalysisResultsProps) {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
-          <h2 className="text-red-800 font-semibold text-lg mb-2">Error</h2>
-          <p className="text-red-600">{error}</p>
+        <div className="bg-destructive/10 border border-destructive/40 rounded-lg p-6 max-w-md">
+          <h2 className="text-destructive font-semibold text-lg mb-2">Error</h2>
+          <p className="text-destructive">{error}</p>
         </div>
       </div>
     );
@@ -54,8 +54,8 @@ export default function AnalysisResults({ analysisId }: AnalysisResultsProps) {
   if (!analysis) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-md">
-          <p className="text-yellow-800">Analysis not found</p>
+        <div className="bg-warning/10 border border-warning/40 rounded-lg p-6 max-w-md">
+          <p className="text-foreground">Analysis not found</p>
         </div>
       </div>
     );
@@ -64,15 +64,15 @@ export default function AnalysisResults({ analysisId }: AnalysisResultsProps) {
   if (analysis.status === 'failed') {
     return (
       <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <h2 className="text-red-800 font-semibold text-lg mb-2">
+        <div className="bg-destructive/10 border border-destructive/40 rounded-lg p-6">
+          <h2 className="text-destructive font-semibold text-lg mb-2">
             Analysis Failed
           </h2>
-          <p className="text-red-600 mb-4">
+          <p className="text-destructive mb-4">
             We encountered an issue processing your analysis. Our team will review
             your submission manually.
           </p>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Reference ID: {analysis._id}
           </p>
         </div>
@@ -84,8 +84,8 @@ export default function AnalysisResults({ analysisId }: AnalysisResultsProps) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">
             Your analysis is being processed. This may take a few moments...
           </p>
         </div>
@@ -97,18 +97,18 @@ export default function AnalysisResults({ analysisId }: AnalysisResultsProps) {
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Your Skin Analysis Results</h1>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Analysis for {analysis.firstName} {analysis.lastName}
         </p>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted-foreground">
           Completed on {new Date(analysis.processedAt || analysis.createdAt).toLocaleDateString()}
         </p>
       </div>
 
-      <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
+      <div className="bg-card rounded-lg shadow-lg p-8 mb-6">
         <div className="mb-6">
           <h2 className="text-2xl font-semibold mb-2">Skin Type</h2>
-          <p className="text-lg text-gray-700">{analysis.analysis.skinType}</p>
+          <p className="text-lg text-foreground">{analysis.analysis.skinType}</p>
         </div>
 
         {analysis.analysis.primaryConcerns &&
@@ -117,7 +117,7 @@ export default function AnalysisResults({ analysisId }: AnalysisResultsProps) {
               <h2 className="text-2xl font-semibold mb-3">Primary Concerns</h2>
               <ul className="list-disc list-inside space-y-2">
                 {analysis.analysis.primaryConcerns.map((concern, index) => (
-                  <li key={index} className="text-gray-700">
+                  <li key={index} className="text-foreground">
                     {concern}
                   </li>
                 ))}
@@ -130,31 +130,31 @@ export default function AnalysisResults({ analysisId }: AnalysisResultsProps) {
         </div>
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h3 className="text-xl font-semibold text-blue-900 mb-3">
+      <div className="bg-primary/10 border border-primary rounded-lg p-6">
+        <h3 className="text-xl font-semibold text-primary mb-3">
           Next Steps: Professional Consultation
         </h3>
-        <p className="text-blue-800 mb-4">
+        <p className="text-primary mb-4">
           This AI analysis provides preliminary insights into your skin health.
           For the most accurate diagnosis and a personalized treatment plan, we
           highly recommend scheduling an in-person consultation with{' '}
           <strong>Dr. Bhavin Garara</strong>.
         </p>
-        <p className="text-blue-700 mb-4">
+        <p className="text-primary mb-4">
           Dr. Garara specializes in advanced skincare treatments and can provide
           tailored solutions based on your unique skin needs and concerns.
         </p>
         <div className="flex gap-4">
-          <button className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+          <button className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition">
             Schedule Consultation
           </button>
-          <button className="border border-blue-600 text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition">
+          <button className="border border-primary text-primary px-6 py-3 rounded-lg font-semibold hover:bg-primary/10 transition">
             Contact Us
           </button>
         </div>
       </div>
 
-      <div className="mt-6 text-center text-sm text-gray-500">
+      <div className="mt-6 text-center text-sm text-muted-foreground">
         <p>Analysis ID: {analysis._id}</p>
         <p>
           You can access this analysis anytime by visiting this page or checking

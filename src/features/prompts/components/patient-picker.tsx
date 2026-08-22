@@ -60,7 +60,7 @@ export function PatientPicker({ onSelect }: { onSelect: (analysisId: string, sum
       </div>
 
       {loading && <div className="p-4 text-foreground">Loading…</div>}
-      {error && <div className="p-4 text-red-600 dark:text-red-400">{error}</div>}
+      {error && <div className="p-4 text-destructive">{error}</div>}
 
       {!loading && !error && (
         <div className="max-h-96 overflow-auto rounded border border-border bg-card text-card-foreground">
@@ -87,7 +87,7 @@ export function PatientPicker({ onSelect }: { onSelect: (analysisId: string, sum
                   key={r._id}
                   onClick={() => setSelectedId(r._id)}
                   className={`cursor-pointer border-t border-border hover:bg-muted/50 ${
-                    selectedId === r._id ? 'bg-blue-50 dark:bg-blue-950/40' : ''
+                    selectedId === r._id ? 'bg-primary/10' : ''
                   }`}
                 >
                   <td className="p-2">

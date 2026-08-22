@@ -24,12 +24,21 @@ export function DataTable<TData>({
   children
 }: DataTableProps<TData>) {
   return (
-    <div className='flex flex-1 flex-col space-y-4'>
+    <div className='flex flex-col gap-4'>
       {children}
-      <div className='relative flex flex-1'>
-        <div className='absolute inset-0 flex overflow-hidden rounded-lg border'>
-          <ScrollArea className='h-full w-full'>
-            <Table>
+      {/*
+        Normal document flow, not `absolute inset-0`.
+
+        The original positioned the scroll container absolutely inside a
+        `flex-1` parent, which only works when an ancestor has a definite
+        height. Rendered inside PageContainer (a normal column within the
+        scrolling <main>), flex-1 had nothing to fill and the table collapsed to
+        0px — toolbar and pagination visible, no rows. Vertical scrolling is the
+        page's job; this only owns horizontal overflow for wide tables.
+      */}
+      <div className='overflow-hidden rounded-lg border'>
+        <ScrollArea className='w-full'>
+          <Table>
               <TableHeader className='bg-muted sticky top-0 z-10'>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
@@ -85,10 +94,9 @@ export function DataTable<TData>({
                   </TableRow>
                 )}
               </TableBody>
-            </Table>
-            <ScrollBar orientation='horizontal' />
-          </ScrollArea>
-        </div>
+          </Table>
+          <ScrollBar orientation='horizontal' />
+        </ScrollArea>
       </div>
       <div className='flex flex-col gap-2.5'>
         <DataTablePagination table={table} />

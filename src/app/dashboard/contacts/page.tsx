@@ -1,71 +1,49 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
+
+import PageContainer from '@/components/layout/page-container';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { ContactsTable } from '@/features/contacts/components/contacts-table';
 import contactService, { type Contact } from '@/services/contact.service';
+import { IconDotsVertical } from '@tabler/icons-react';
 
-const SOURCE_LABEL: Record<Contact['source'], string> = {
-  manual: 'Manual',
-  bulk: 'Bulk',
-  patient_import: 'Patient',
-};
+function errMessage(e: unknown, fallback: string) {
+  return (
+    (e as { response?: { data?: { message?: string } } })?.response?.data
+      ?.message ?? fallback
+  );
+}
 
 export default function ContactsPage() {
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [refreshToken, setRefreshToken] = useState(0);
+  const refresh = useCallback(() => setRefreshToken((n) => n + 1), []);
 
   const [addOpen, setAddOpen] = useState(false);
-  const [addForm, setAddForm] = useState({ email: '', name: '' });
-
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [addForm, setAddForm] = useState({ email: '', name: '' });
   const [bulkText, setBulkText] = useState('');
-
   const [working, setWorking] = useState(false);
-
-  const load = async () => {
-    setLoading(true);
-    try {
-      const result = await contactService.list({ limit: 500, search: search || undefined });
-      setContacts(result.contacts);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to load contacts');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    load();
-  };
 
   const handleAdd = async () => {
     if (!addForm.email.trim()) {
@@ -74,13 +52,16 @@ export default function ContactsPage() {
     }
     setWorking(true);
     try {
-      await contactService.create({ email: addForm.email.trim(), name: addForm.name.trim() });
+      await contactService.create({
+        email: addForm.email.trim(),
+        name: addForm.name.trim()
+      });
       toast.success('Contact added');
       setAddOpen(false);
       setAddForm({ email: '', name: '' });
-      load();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to add contact');
+      refresh();
+    } catch (e) {
+      toast.error(errMessage(e, 'Failed to add contact'));
     } finally {
       setWorking(false);
     }
@@ -93,209 +74,249 @@ export default function ContactsPage() {
     }
     setWorking(true);
     try {
-      const summary = await contactService.bulkAdd({ emails: bulkText });
+      const s = await contactService.bulkAdd({ emails: bulkText });
       toast.success(
-        `Added ${summary.added}, skipped ${summary.skipped} existing, ${summary.invalid} invalid`
+        `Added ${s.added}, skipped ${s.skipped} existing, ${s.invalid} invalid`
       );
       setBulkOpen(false);
       setBulkText('');
-      load();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Bulk add failed');
+      refresh();
+    } catch (e) {
+      toast.error(errMessage(e, 'Bulk add failed'));
     } finally {
       setWorking(false);
     }
   };
 
-  const handleImportPatients = async () => {
-    if (!confirm('Import all patient emails from skin analyses into your contact list?')) return;
+  /**
+   * Both imports behave identically, so they share a runner. The summary is
+   * reported in full: `added` alone hides the common case where a run does
+   * nothing because everyone is already on the list.
+   */
+  const runImport = async (
+    kind: 'patients' | 'enquiries',
+    confirmText: string
+  ) => {
+    if (!window.confirm(confirmText)) return;
     setWorking(true);
     try {
-      const summary = await contactService.importPatients();
-      toast.success(
-        `Imported ${summary.added} new patient emails (${summary.skipped} already in list)`
-      );
-      load();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Patient import failed');
+      const s =
+        kind === 'patients'
+          ? await contactService.importPatients()
+          : await contactService.importEnquiries();
+
+      const parts = [`${s.added} added`];
+      if (s.skipped) parts.push(`${s.skipped} already on the list`);
+      if (s.invalid) parts.push(`${s.invalid} without a valid email`);
+
+      if (s.added > 0) toast.success(parts.join(' · '));
+      else toast.info(`Nothing to add — ${parts.slice(1).join(' · ') || 'no records found'}`);
+
+      refresh();
+    } catch (e) {
+      toast.error(errMessage(e, `${kind === 'patients' ? 'Patient' : 'Enquiry'} import failed`));
     } finally {
       setWorking(false);
     }
   };
 
-  const handleToggleSubscribed = async (contact: Contact) => {
-    try {
-      await contactService.update(contact._id, { subscribed: !contact.subscribed });
-      toast.success(contact.subscribed ? 'Unsubscribed' : 'Resubscribed');
-      load();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to update contact');
-    }
-  };
+  const handleImportPatients = () =>
+    runImport(
+      'patients',
+      'Import all patient emails from skin analyses into your contact list?'
+    );
 
-  const handleDelete = async (contact: Contact) => {
-    if (!confirm(`Delete ${contact.email}?`)) return;
-    try {
-      await contactService.remove(contact._id);
-      toast.success('Contact deleted');
-      load();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to delete contact');
-    }
-  };
+  const handleImportEnquiries = () =>
+    runImport(
+      'enquiries',
+      'Import everyone who submitted a consultation enquiry into your contact list? Enquiries marked as spam are excluded.'
+    );
+
+  const renderActions = useCallback(
+    (contact: Contact) => <RowActions contact={contact} onChanged={refresh} />,
+    [refresh]
+  );
 
   return (
-    <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Contacts</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage the email list used for sending blogs and announcements.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleImportPatients} disabled={working}>
+    <PageContainer
+      pageTitle='Contacts'
+      pageDescription='Mailing list for blog and clinic updates.'
+      pageHeaderAction={
+        <div className='flex flex-wrap gap-2'>
+          <Button
+            variant='outline'
+            onClick={handleImportPatients}
+            disabled={working}
+          >
             Import patients
           </Button>
-          <Button variant="outline" onClick={() => setBulkOpen(true)} disabled={working}>
+          <Button
+            variant='outline'
+            onClick={handleImportEnquiries}
+            disabled={working}
+          >
+            Import enquiries
+          </Button>
+          <Button
+            variant='outline'
+            onClick={() => setBulkOpen(true)}
+            disabled={working}
+          >
             Bulk add
           </Button>
           <Button onClick={() => setAddOpen(true)} disabled={working}>
             Add contact
           </Button>
         </div>
-      </div>
+      }
+    >
+      <ContactsTable refreshToken={refreshToken} renderActions={renderActions} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>All contacts ({contacts.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSearch} className="flex gap-2 mb-4">
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by email or name…"
-              className="max-w-sm"
-            />
-            <Button type="submit" variant="outline">
-              Search
-            </Button>
-          </form>
-
-          {loading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
-          ) : contacts.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No contacts yet.</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Source</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Added</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {contacts.map((c) => (
-                  <TableRow key={c._id}>
-                    <TableCell className="font-medium">{c.email}</TableCell>
-                    <TableCell>{c.name || <span className="text-muted-foreground">—</span>}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{SOURCE_LABEL[c.source] || c.source}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={c.subscribed ? 'default' : 'secondary'}>
-                        {c.subscribed ? 'Subscribed' : 'Unsubscribed'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{new Date(c.createdAt).toLocaleDateString()}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button size="sm" variant="outline" onClick={() => handleToggleSubscribed(c)}>
-                          {c.subscribed ? 'Unsubscribe' : 'Subscribe'}
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleDelete(c)}>
-                          Delete
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Add single */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent>
+        <DialogContent className='sm:max-w-[440px]'>
           <DialogHeader>
             <DialogTitle>Add contact</DialogTitle>
-            <DialogDescription>Add one email to the list.</DialogDescription>
+            <DialogDescription>
+              Adds a single email to the mailing list.
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div>
-              <Label htmlFor="c-email">Email</Label>
+          <div className='space-y-4 py-2'>
+            <div className='space-y-2'>
+              <Label htmlFor='c-email'>Email</Label>
               <Input
-                id="c-email"
-                type="email"
+                id='c-email'
+                type='email'
                 value={addForm.email}
-                onChange={(e) => setAddForm({ ...addForm, email: e.target.value })}
+                onChange={(e) =>
+                  setAddForm({ ...addForm, email: e.target.value })
+                }
+                disabled={working}
               />
             </div>
-            <div>
-              <Label htmlFor="c-name">Name (optional)</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='c-name'>Name (optional)</Label>
               <Input
-                id="c-name"
+                id='c-name'
                 value={addForm.name}
-                onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
+                onChange={(e) =>
+                  setAddForm({ ...addForm, name: e.target.value })
+                }
+                disabled={working}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddOpen(false)} disabled={working}>
+            <Button
+              variant='outline'
+              onClick={() => setAddOpen(false)}
+              disabled={working}
+            >
               Cancel
             </Button>
             <Button onClick={handleAdd} disabled={working}>
-              {working ? 'Adding…' : 'Add'}
+              {working && <Loader2 className='mr-2 size-4 animate-spin' />}
+              Add
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Bulk add */}
       <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
-        <DialogContent>
+        <DialogContent className='sm:max-w-[560px]'>
           <DialogHeader>
             <DialogTitle>Bulk add contacts</DialogTitle>
             <DialogDescription>
-              Paste emails separated by commas, spaces, semicolons, or newlines. Invalid and
-              duplicate addresses are skipped.
+              One email per line, or comma-separated. Existing and invalid
+              addresses are skipped.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-2">
-            <Textarea
-              value={bulkText}
-              onChange={(e) => setBulkText(e.target.value)}
-              rows={10}
-              placeholder={'alice@example.com\nbob@example.com, carol@example.com\ndave@example.com'}
-            />
-          </div>
+          <Textarea
+            rows={10}
+            value={bulkText}
+            onChange={(e) => setBulkText(e.target.value)}
+            placeholder={'someone@example.com\nanother@example.com'}
+            disabled={working}
+          />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setBulkOpen(false)} disabled={working}>
+            <Button
+              variant='outline'
+              onClick={() => setBulkOpen(false)}
+              disabled={working}
+            >
               Cancel
             </Button>
             <Button onClick={handleBulkAdd} disabled={working}>
-              {working ? 'Adding…' : 'Add all'}
+              {working && <Loader2 className='mr-2 size-4 animate-spin' />}
+              Add emails
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
+  );
+}
+
+function RowActions({
+  contact,
+  onChanged
+}: {
+  contact: Contact;
+  onChanged: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+
+  const run = async (label: string, fn: () => Promise<unknown>) => {
+    setBusy(true);
+    try {
+      await fn();
+      toast.success(label);
+      onChanged();
+    } catch (e) {
+      toast.error(errMessage(e, `Could not ${label.toLowerCase()}`));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant='ghost'
+          size='icon'
+          className='size-8'
+          disabled={busy}
+          aria-label={`Actions for ${contact.email}`}
+        >
+          <IconDotsVertical className='size-4' />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align='end'>
+        <DropdownMenuItem
+          onClick={() =>
+            run(contact.subscribed ? 'Unsubscribed' : 'Resubscribed', () =>
+              contactService.update(contact._id, {
+                subscribed: !contact.subscribed
+              })
+            )
+          }
+        >
+          {contact.subscribed ? 'Unsubscribe' : 'Resubscribe'}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          variant='destructive'
+          onClick={() => {
+            if (!window.confirm(`Remove ${contact.email} from the list?`))
+              return;
+            void run('Contact removed', () =>
+              contactService.remove(contact._id)
+            );
+          }}
+        >
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

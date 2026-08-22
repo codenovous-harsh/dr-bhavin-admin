@@ -1,6 +1,7 @@
 'use client';
 
-import { IconTrendingUp, IconChartLine } from '@tabler/icons-react';
+import * as React from 'react';
+import { IconTrendingDown, IconTrendingUp, IconMinus } from '@tabler/icons-react';
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
 
 import {
@@ -14,47 +15,112 @@ import {
 import {
   ChartConfig,
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent
 } from '@/components/ui/chart';
+import { Skeleton } from '@/components/ui/skeleton';
+import dashboardService, {
+  type SubmissionTrends
+} from '@/services/dashboard.service';
 
-// Mock data for visualization - will be replaced with real time-series data
-const chartData = [
-  { date: 'Week 1', completed: 12, pending: 8 },
-  { date: 'Week 2', completed: 18, pending: 6 },
-  { date: 'Week 3', completed: 24, pending: 5 },
-  { date: 'Week 4', completed: 30, pending: 7 },
-  { date: 'Week 5', completed: 35, pending: 4 },
-  { date: 'Week 6', completed: 42, pending: 9 }
-];
 
 const chartConfig = {
   submissions: {
     label: 'Submissions'
   },
+  // State, not series identity -> reserved status tokens.
   completed: {
     label: 'Completed',
-    color: 'hsl(142, 76%, 36%)' // green
+    color: 'var(--success)'
   },
   pending: {
     label: 'Pending',
-    color: 'hsl(48, 96%, 53%)' // yellow
+    color: 'var(--warning)'
   }
 } satisfies ChartConfig;
 
+const DAYS = 30;
+
+/** "17 Aug" — short enough to fit 30 daily ticks without rotating. */
+const axisFmt = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'short',
+  timeZone: 'Europe/London'
+});
+const tooltipFmt = new Intl.DateTimeFormat('en-GB', {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+  timeZone: 'Europe/London'
+});
+const formatAxisDay = (iso: string) => axisFmt.format(new Date(iso));
+const formatTooltipDay = (iso: unknown) =>
+  typeof iso === 'string' ? tooltipFmt.format(new Date(iso)) : String(iso);
+
 export function AreaGraph() {
+  const [trends, setTrends] = React.useState<SubmissionTrends | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    dashboardService
+      .getSubmissionTrends(DAYS)
+      .then(setTrends)
+      .catch((e) =>
+        setError(
+          e?.response?.data?.message || 'Could not load submission trends'
+        )
+      )
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <Card className='@container/card'>
+        <CardHeader>
+          <Skeleton className='h-6 w-48' />
+          <Skeleton className='mt-2 h-4 w-64' />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className='h-[250px] w-full' />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error || !trends) {
+    return (
+      <Card className='@container/card'>
+        <CardHeader>
+          <CardTitle>Skin analyses over time</CardTitle>
+          <CardDescription className='text-destructive'>
+            {error ?? 'No trend data available'}
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  const chartData = trends.points;
+  const hasAny = chartData.some((p) => p.total > 0);
+  const { changePct, current, previous } = trends.delta;
+
   return (
-    <Card className='@container/card'>
+    <Card className='@container/card flex flex-col'>
       <CardHeader>
-        <CardTitle>Submission Trends</CardTitle>
+        <CardTitle>Skin analyses over time</CardTitle>
         <CardDescription>
           <span className='hidden @[540px]/card:block'>
-            Weekly submission status trends (sample data)
+            People who completed the online skin analysis · last {DAYS} days
           </span>
-          <span className='@[540px]/card:hidden'>Weekly trends</span>
+          <span className='@[540px]/card:hidden'>
+            Skin analyses · last {DAYS} days
+          </span>
         </CardDescription>
       </CardHeader>
-      <CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
+      <CardContent className='flex-1 px-2 pt-4 sm:px-6 sm:pt-6'>
         <ChartContainer
           config={chartConfig}
           className='aspect-auto h-[250px] w-full'
@@ -70,24 +136,24 @@ export function AreaGraph() {
               <linearGradient id='fillCompleted' x1='0' y1='0' x2='0' y2='1'>
                 <stop
                   offset='5%'
-                  stopColor='hsl(142, 76%, 36%)'
+                  stopColor='var(--success)'
                   stopOpacity={0.8}
                 />
                 <stop
                   offset='95%'
-                  stopColor='hsl(142, 76%, 36%)'
+                  stopColor='var(--success)'
                   stopOpacity={0.1}
                 />
               </linearGradient>
               <linearGradient id='fillPending' x1='0' y1='0' x2='0' y2='1'>
                 <stop
                   offset='5%'
-                  stopColor='hsl(48, 96%, 53%)'
+                  stopColor='var(--warning)'
                   stopOpacity={0.8}
                 />
                 <stop
                   offset='95%'
-                  stopColor='hsl(48, 96%, 53%)'
+                  stopColor='var(--warning)'
                   stopOpacity={0.1}
                 />
               </linearGradient>
@@ -99,21 +165,33 @@ export function AreaGraph() {
               axisLine={false}
               tickMargin={8}
               tick={{ fontSize: 12 }}
+              minTickGap={28}
+              tickFormatter={formatAxisDay}
             />
-            <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+            <ChartTooltip
+              cursor={false}
+              content={<ChartTooltipContent labelFormatter={formatTooltipDay} />}
+            />
+            {/* Two series stacked in the same space are unreadable without a
+                key; identity must never rest on colour alone. */}
+            <ChartLegend content={<ChartLegendContent />} />
+            {/* linear, not monotone: these are discrete weekly counts. A
+                monotone spline draws a smooth ramp between buckets and
+                overshoots, implying growth that happened between weeks when
+                the data only exists at week boundaries. */}
             <Area
               dataKey='pending'
-              type='monotone'
+              type='linear'
               fill='url(#fillPending)'
-              stroke='hsl(48, 96%, 53%)'
+              stroke='var(--warning)'
               strokeWidth={2}
               stackId='1'
             />
             <Area
               dataKey='completed'
-              type='monotone'
+              type='linear'
               fill='url(#fillCompleted)'
-              stroke='hsl(142, 76%, 36%)'
+              stroke='var(--success)'
               strokeWidth={2}
               stackId='1'
             />
@@ -121,14 +199,28 @@ export function AreaGraph() {
         </ChartContainer>
       </CardContent>
       <CardFooter>
-        <div className='flex w-full items-start gap-2 text-sm'>
-          <div className='grid gap-2'>
-            <div className='flex items-center gap-2 font-medium leading-none'>
-              Sample trend data <IconChartLine className='h-4 w-4' />
-            </div>
-            <div className='flex items-center gap-2 leading-none text-muted-foreground'>
-              Historical time-series data coming soon
-            </div>
+        <div className='grid gap-1.5 text-sm'>
+          <div className='flex items-center gap-2 leading-none font-medium'>
+            {changePct === null ? (
+              <>
+                <IconMinus className='size-4' />
+                No earlier period to compare
+              </>
+            ) : changePct >= 0 ? (
+              <>
+                <IconTrendingUp className='text-success size-4' />
+                Up {changePct}% vs the previous 7 days
+              </>
+            ) : (
+              <>
+                <IconTrendingDown className='text-destructive size-4' />
+                Down {Math.abs(changePct)}% vs the previous 7 days
+              </>
+            )}
+          </div>
+          <div className='text-muted-foreground leading-none'>
+            {current} analyses in the last 7 days vs {previous} the week before
+            {!hasAny && ` · no submissions in the last ${DAYS} days`}
           </div>
         </div>
       </CardFooter>

@@ -88,14 +88,14 @@ export function PromptSimulator({ draftSystemPrompt, draftUserPromptTemplate, on
                     setResult(null);
                     setError(null);
                   }}
-                  className="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                  className="mt-2 text-xs text-primary hover:underline"
                 >
                   Pick a different patient
                 </button>
               </div>
 
               {error && (
-                <div className="rounded bg-red-50 dark:bg-red-950/50 p-3 text-sm text-red-800 dark:text-red-200">
+                <div className="rounded bg-destructive/10 p-3 text-sm text-destructive">
                   {error}
                 </div>
               )}

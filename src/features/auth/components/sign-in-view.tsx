@@ -1,15 +1,11 @@
 'use client';
 
-import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { GitHubLogoIcon } from '@radix-ui/react-icons';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
@@ -22,7 +18,7 @@ import { authService } from '@/services/auth.service';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
-export default function SignInViewPage({ stars }: { stars: number }) {
+export default function SignInViewPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -83,14 +79,20 @@ export default function SignInViewPage({ stars }: { stars: number }) {
               background: `radial-gradient(circle, #27A48C 0%, transparent 70%)`
             }}
           />
-          <div className='relative z-20 rounded-3xl bg-white p-12 shadow-2xl'>
+          <div className='relative z-20 flex flex-col items-center gap-4 text-center'>
+            {/* The cream lockup already carries the practice name, so a
+                separate heading would repeat it — only the context line
+                survives. It ships pre-coloured for a dark ground (#F5EBE0), so
+                unlike the monogram it needs no brightness-0/invert filter. */}
             <Image
-              src='/assets/bhavinLogo.svg'
-              alt='Bhavin Garara'
-              width={400}
-              height={120}
-              className='h-24 w-auto'
+              src='/assets/logo-cream.png'
+              alt='Dr Bhavin Garara'
+              width={640}
+              height={257}
+              className='w-72 max-w-full object-contain drop-shadow-lg'
+              priority
             />
+            <p className='text-sm text-white/70'>Clinic administration</p>
           </div>
         </div>
       </div>
@@ -114,7 +116,7 @@ export default function SignInViewPage({ stars }: { stars: number }) {
                     placeholder='Enter your email'
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className='focus:border-[#27A48C] focus:ring-[#27A48C]'
+                   
                     disabled={isLoading}
                     required
                   />
@@ -124,7 +126,7 @@ export default function SignInViewPage({ stars }: { stars: number }) {
                     <Label htmlFor='password'>Password</Label>
                     <Link
                       href='/auth/forgot-password'
-                      className='text-sm font-medium text-[#27A48C] hover:underline'
+                      className='text-sm font-medium text-primary hover:underline'
                     >
                       Forgot password?
                     </Link>
@@ -135,7 +137,7 @@ export default function SignInViewPage({ stars }: { stars: number }) {
                     placeholder='Enter your password'
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className='focus:border-[#27A48C] focus:ring-[#27A48C]'
+                   
                     disabled={isLoading}
                     required
                   />
@@ -144,9 +146,6 @@ export default function SignInViewPage({ stars }: { stars: number }) {
                   type='submit'
                   className='w-full'
                   disabled={isLoading}
-                  style={{
-                    background: `linear-gradient(135deg, #27A48C 0%, #0F3E35 100%)`
-                  }}
                 >
                   {isLoading ? (
                     <>
@@ -161,23 +160,6 @@ export default function SignInViewPage({ stars }: { stars: number }) {
             </form>
           </Card>
 
-          <p className='text-muted-foreground px-8 text-center text-sm'>
-            By clicking continue, you agree to our{' '}
-            <Link
-              href='/terms'
-              className='underline underline-offset-4 hover:text-[#27A48C]'
-            >
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link
-              href='/privacy'
-              className='underline underline-offset-4 hover:text-[#27A48C]'
-            >
-              Privacy Policy
-            </Link>
-            .
-          </p>
         </div>
       </div>
     </div>

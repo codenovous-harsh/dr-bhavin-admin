@@ -144,7 +144,7 @@ export default function QuestionnaireDisplay({
                               key={index}
                               className="flex items-start gap-2 text-sm"
                             >
-                              <span className="text-green-600 mt-0.5">✓</span>
+                              <span className="text-success mt-0.5">✓</span>
                               <span>{item}</span>
                             </li>
                           ))}

@@ -39,11 +39,11 @@ export default function PatientStatsCards() {
         {[1, 2, 3, 4].map((i) => (
           <Card key={i} className="animate-pulse">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="h-4 w-24 bg-gray-200 rounded"></div>
-              <div className="h-4 w-4 bg-gray-200 rounded"></div>
+              <div className="h-4 w-24 bg-muted rounded"></div>
+              <div className="h-4 w-4 bg-muted rounded"></div>
             </CardHeader>
             <CardContent>
-              <div className="h-8 w-16 bg-gray-200 rounded"></div>
+              <div className="h-8 w-16 bg-muted rounded"></div>
             </CardContent>
           </Card>
         ))}
@@ -56,7 +56,7 @@ export default function PatientStatsCards() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-red-600">{error || 'Failed to load stats'}</p>
+            <p className="text-sm text-destructive">{error || 'Failed to load stats'}</p>
           </CardContent>
         </Card>
       </div>

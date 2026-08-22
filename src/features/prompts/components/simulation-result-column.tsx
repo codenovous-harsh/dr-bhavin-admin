@@ -48,10 +48,10 @@ export function SimulationResultColumn({ title, loading, result, onRetry }: Prop
       {loading && <div className="py-8 text-center text-muted-foreground">Running…</div>}
 
       {!loading && result?.error && (
-        <div className="rounded bg-red-50 dark:bg-red-950/50 p-3 text-sm text-red-800 dark:text-red-200">
+        <div className="rounded bg-destructive/10 p-3 text-sm text-destructive">
           <p className="mb-2">{result.error}</p>
           {onRetry && (
-            <button onClick={onRetry} className="text-red-700 dark:text-red-300 underline">
+            <button onClick={onRetry} className="text-destructive underline">
               Retry
             </button>
           )}
@@ -61,7 +61,7 @@ export function SimulationResultColumn({ title, loading, result, onRetry }: Prop
       {!loading && result?.response && (
         <>
           {result.warnings.length > 0 && (
-            <div className="mb-3 rounded bg-amber-50 dark:bg-amber-950/50 p-2 text-xs text-amber-800 dark:text-amber-200">
+            <div className="mb-3 rounded bg-warning/10 p-2 text-xs text-foreground">
               {result.warnings.map((w, i) => (
                 <div key={i}>⚠ {w}</div>
               ))}
@@ -72,7 +72,7 @@ export function SimulationResultColumn({ title, loading, result, onRetry }: Prop
           </div>
           <button
             onClick={() => setShowPrompt(!showPrompt)}
-            className="mt-3 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+            className="mt-3 text-xs text-primary hover:underline"
           >
             {showPrompt ? 'Hide' : 'Show'} rendered prompt
           </button>

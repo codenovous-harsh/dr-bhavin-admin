@@ -18,10 +18,20 @@ import {
 } from '@/components/ui/chart';
 import dashboardService from '@/services/dashboard.service';
 
+/**
+ * Published / Drafts / Featured are NOMINAL categories of a single series
+ * (a count), so every bar wears the same slot-1 hue. Colouring each bar
+ * differently would spend the identity channel re-encoding what the bar
+ * length already shows — and with one series there is no legend to read.
+ *
+ * `color` was previously `hsl(var(--chart-1))`, which is the pre-v4 shadcn
+ * format: --chart-1 is already a complete colour, so that wrapper produced
+ * `hsl(#27a48c)` — invalid, and silently no colour at all.
+ */
 const chartConfig = {
   count: {
-    label: 'Count',
-    color: 'hsl(var(--chart-1))'
+    label: 'Posts',
+    color: 'var(--chart-1)'
   }
 } satisfies ChartConfig;
 
@@ -35,21 +45,9 @@ export function BarGraph() {
         const data = await dashboardService.getBlogPerformance();
 
         setChartData([
-          {
-            category: 'Published',
-            count: data.published,
-            fill: 'hsl(142, 76%, 36%)' // green
-          },
-          {
-            category: 'Drafts',
-            count: data.drafts,
-            fill: 'hsl(48, 96%, 53%)' // yellow
-          },
-          {
-            category: 'Featured',
-            count: data.featured,
-            fill: 'hsl(217, 91%, 60%)' // blue
-          }
+          { category: 'Published', count: data.published },
+          { category: 'Drafts', count: data.drafts },
+          { category: 'Featured', count: data.featured }
         ]);
       } catch (error) {
         console.error('Error fetching blog performance:', error);
@@ -65,11 +63,11 @@ export function BarGraph() {
     return (
       <Card className='@container/card animate-pulse'>
         <CardHeader>
-          <div className='h-6 w-48 bg-gray-200 rounded'></div>
-          <div className='h-4 w-64 bg-gray-200 rounded mt-2'></div>
+          <div className='h-6 w-48 bg-muted rounded'></div>
+          <div className='h-4 w-64 bg-muted rounded mt-2'></div>
         </CardHeader>
         <CardContent>
-          <div className='h-[300px] bg-gray-200 rounded'></div>
+          <div className='h-[300px] bg-muted rounded'></div>
         </CardContent>
       </Card>
     );
@@ -77,7 +75,7 @@ export function BarGraph() {
 
   if (chartData.length === 0) {
     return (
-      <Card className='@container/card'>
+      <Card className='@container/card flex flex-col'>
         <CardHeader>
           <CardTitle>Blog Performance</CardTitle>
           <CardDescription>No data available</CardDescription>
@@ -87,7 +85,7 @@ export function BarGraph() {
   }
 
   return (
-    <Card className='@container/card'>
+    <Card className='@container/card flex flex-col'>
       <CardHeader>
         <CardTitle>Blog Performance</CardTitle>
         <CardDescription>
@@ -97,7 +95,7 @@ export function BarGraph() {
           <span className='@[540px]/card:hidden'>Blog status overview</span>
         </CardDescription>
       </CardHeader>
-      <CardContent className='px-2 sm:px-6'>
+      <CardContent className='flex-1 px-2 sm:px-6'>
         <ChartContainer config={chartConfig} className='h-[300px] w-full'>
           <BarChart
             accessibilityLayer
@@ -109,21 +107,6 @@ export function BarGraph() {
               left: 20
             }}
           >
-            <defs>
-              {chartData.map((item) => (
-                <linearGradient
-                  key={item.category}
-                  id={`fill${item.category}`}
-                  x1='0'
-                  y1='0'
-                  x2='0'
-                  y2='1'
-                >
-                  <stop offset='0%' stopColor={item.fill} stopOpacity={0.9} />
-                  <stop offset='100%' stopColor={item.fill} stopOpacity={0.6} />
-                </linearGradient>
-              ))}
-            </defs>
             <CartesianGrid vertical={false} strokeDasharray='3 3' opacity={0.3} />
             <XAxis
               dataKey='category'
@@ -136,25 +119,22 @@ export function BarGraph() {
               tickLine={false}
               axisLine={false}
               tick={{ fontSize: 12 }}
+              allowDecimals={false}
               tickFormatter={(value) => value.toLocaleString()}
             />
             <ChartTooltip
-              cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
+              cursor={{ fill: 'var(--muted)', opacity: 0.5 }}
               content={<ChartTooltipContent hideLabel />}
             />
+            {/* One <Bar>, one fill. This previously nested a <Bar> per row
+                INSIDE the outer <Bar> — not a valid Recharts child, so the
+                per-category fills never applied anyway. */}
             <Bar
               dataKey='count'
-              radius={[8, 8, 0, 0]}
-              fill='url(#fillPublished)'
-            >
-              {chartData.map((entry, index) => (
-                <Bar
-                  key={`bar-${index}`}
-                  dataKey='count'
-                  fill={`url(#fill${entry.category})`}
-                />
-              ))}
-            </Bar>
+              radius={[6, 6, 0, 0]}
+              fill='var(--color-count)'
+              maxBarSize={72}
+            />
           </BarChart>
         </ChartContainer>
       </CardContent>

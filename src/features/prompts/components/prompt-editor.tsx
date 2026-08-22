@@ -62,9 +62,9 @@ const VARIABLE_HINTS = [
 ];
 
 const statusBadge: Record<string, string> = {
-  draft: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200',
-  published: 'bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-200',
-  archived: 'bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300',
+  draft: 'border border-warning/50 bg-warning/10 text-foreground',
+  published: 'border border-success/50 bg-success/10 text-foreground',
+  archived: 'border border-border bg-muted text-muted-foreground'
 };
 
 export function PromptEditor({ id }: { id: string }) {
@@ -143,13 +143,13 @@ export function PromptEditor({ id }: { id: string }) {
   }
 
   if (!doc && !error) return <div className="p-4">Loading…</div>;
-  if (!doc) return <div className="p-4 text-red-600">{error}</div>;
+  if (!doc) return <div className="p-4 text-destructive">{error}</div>;
 
   return (
     <div className="container mx-auto p-6">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/dashboard/prompts" className="text-sm text-blue-600 hover:underline">
+          <Link href="/dashboard/prompts" className="text-sm text-primary hover:underline">
             ← Back
           </Link>
           <h1 className="text-xl font-semibold">
@@ -168,7 +168,7 @@ export function PromptEditor({ id }: { id: string }) {
           <button
             disabled={!isDraft || saving}
             onClick={handlePublish}
-            className="rounded bg-green-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="rounded bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
           >
             Publish
           </button>
@@ -181,8 +181,8 @@ export function PromptEditor({ id }: { id: string }) {
         </div>
       </div>
 
-      {error && <div className="mb-3 rounded bg-red-50 dark:bg-red-950/50 p-3 text-sm text-red-800 dark:text-red-200">{error}</div>}
-      {info && <div className="mb-3 rounded bg-green-50 dark:bg-green-950/50 p-3 text-sm text-green-800 dark:text-green-200">{info}</div>}
+      {error && <div className="mb-3 rounded bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
+      {info && <div className="mb-3 rounded bg-success/10 p-3 text-sm text-foreground">{info}</div>}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
         <div className="space-y-4">

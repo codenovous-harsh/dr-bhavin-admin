@@ -126,7 +126,7 @@ export default function SkinAnalysisForm() {
         return (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold">Skin Moisture</h2>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               How often do you use a moisturiser for your skin to feel hydrated?
               (Check as many that apply)
             </p>
@@ -137,7 +137,7 @@ export default function SkinAnalysisForm() {
                     type="checkbox"
                     checked={formData.questionnaire.skinMoisture?.includes(option)}
                     onChange={() => handleCheckboxChange('skinMoisture', option)}
-                    className="h-4 w-4 text-blue-600"
+                    className="h-4 w-4 text-primary"
                   />
                   <span>{option}</span>
                 </label>
@@ -150,7 +150,7 @@ export default function SkinAnalysisForm() {
         return (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold">Skin Sebum</h2>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               How Oily is your skin? (Check as many that apply)
             </p>
             <div className="space-y-2">
@@ -160,7 +160,7 @@ export default function SkinAnalysisForm() {
                     type="checkbox"
                     checked={formData.questionnaire.skinSebum?.includes(option)}
                     onChange={() => handleCheckboxChange('skinSebum', option)}
-                    className="h-4 w-4 text-blue-600"
+                    className="h-4 w-4 text-primary"
                   />
                   <span>{option}</span>
                 </label>
@@ -173,7 +173,7 @@ export default function SkinAnalysisForm() {
         return (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold">Skin Inflammation</h2>
-            <p className="text-gray-600">(Check as many that apply)</p>
+            <p className="text-muted-foreground">(Check as many that apply)</p>
             <div className="space-y-2">
               {SKIN_INFLAMMATION_OPTIONS.map((option) => (
                 <label key={option} className="flex items-center space-x-3">
@@ -183,7 +183,7 @@ export default function SkinAnalysisForm() {
                       option
                     )}
                     onChange={() => handleCheckboxChange('skinInflammation', option)}
-                    className="h-4 w-4 text-blue-600"
+                    className="h-4 w-4 text-primary"
                   />
                   <span>{option}</span>
                 </label>
@@ -198,7 +198,7 @@ export default function SkinAnalysisForm() {
             <h2 className="text-2xl font-bold">
               Do you want to lighten dark spots on your skin?
             </h2>
-            <p className="text-gray-600">(Check one that applies)</p>
+            <p className="text-muted-foreground">(Check one that applies)</p>
             <div className="space-y-2">
               {PIGMENTATION_OPTIONS.map((option) => (
                 <label key={option} className="flex items-center space-x-3">
@@ -207,7 +207,7 @@ export default function SkinAnalysisForm() {
                     name="pigmentation"
                     checked={formData.questionnaire.pigmentation === option}
                     onChange={() => handleRadioChange('pigmentation', option)}
-                    className="h-4 w-4 text-blue-600"
+                    className="h-4 w-4 text-primary"
                   />
                   <span>{option}</span>
                 </label>
@@ -220,7 +220,7 @@ export default function SkinAnalysisForm() {
         return (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold">Lifestyle Habits</h2>
-            <p className="text-gray-600">(Check as many that apply)</p>
+            <p className="text-muted-foreground">(Check as many that apply)</p>
             <div className="space-y-2">
               {LIFESTYLE_HABITS_OPTIONS.map((option) => (
                 <label key={option} className="flex items-center space-x-3">
@@ -230,7 +230,7 @@ export default function SkinAnalysisForm() {
                       option
                     )}
                     onChange={() => handleCheckboxChange('lifestyleHabits', option)}
-                    className="h-4 w-4 text-blue-600"
+                    className="h-4 w-4 text-primary"
                   />
                   <span>{option}</span>
                 </label>
@@ -243,7 +243,7 @@ export default function SkinAnalysisForm() {
         return (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold">Suncare Habits</h2>
-            <p className="text-gray-600">(Check as many that apply)</p>
+            <p className="text-muted-foreground">(Check as many that apply)</p>
             <div className="space-y-2">
               {SUNCARE_HABITS_OPTIONS.map((option) => (
                 <label key={option} className="flex items-center space-x-3">
@@ -251,7 +251,7 @@ export default function SkinAnalysisForm() {
                     type="checkbox"
                     checked={formData.questionnaire.suncareHabits?.includes(option)}
                     onChange={() => handleCheckboxChange('suncareHabits', option)}
-                    className="h-4 w-4 text-blue-600"
+                    className="h-4 w-4 text-primary"
                   />
                   <span>{option}</span>
                 </label>
@@ -264,7 +264,7 @@ export default function SkinAnalysisForm() {
         return (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold">Eyes</h2>
-            <p className="text-gray-600">(Check as many that apply)</p>
+            <p className="text-muted-foreground">(Check as many that apply)</p>
             <div className="space-y-2">
               {EYE_CONCERNS_OPTIONS.map((option) => (
                 <label key={option} className="flex items-center space-x-3">
@@ -272,7 +272,7 @@ export default function SkinAnalysisForm() {
                     type="checkbox"
                     checked={formData.questionnaire.eyeConcerns?.includes(option)}
                     onChange={() => handleCheckboxChange('eyeConcerns', option)}
-                    className="h-4 w-4 text-blue-600"
+                    className="h-4 w-4 text-primary"
                   />
                   <span>{option}</span>
                 </label>
@@ -285,7 +285,7 @@ export default function SkinAnalysisForm() {
         return (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold">Any other Concerns</h2>
-            <p className="text-gray-600">(Check as many that apply)</p>
+            <p className="text-muted-foreground">(Check as many that apply)</p>
             <div className="space-y-2">
               {OTHER_CONCERNS_OPTIONS.map((option) => (
                 <label key={option} className="flex items-center space-x-3">
@@ -293,7 +293,7 @@ export default function SkinAnalysisForm() {
                     type="checkbox"
                     checked={formData.questionnaire.otherConcerns?.includes(option)}
                     onChange={() => handleCheckboxChange('otherConcerns', option)}
-                    className="h-4 w-4 text-blue-600"
+                    className="h-4 w-4 text-primary"
                   />
                   <span>{option}</span>
                 </label>
@@ -306,7 +306,7 @@ export default function SkinAnalysisForm() {
         return (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold">What would you like to address?</h2>
-            <p className="text-gray-600">(Check as many that apply)</p>
+            <p className="text-muted-foreground">(Check as many that apply)</p>
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {ADDRESS_CONCERNS_OPTIONS.map((option) => (
                 <label key={option} className="flex items-center space-x-3">
@@ -318,7 +318,7 @@ export default function SkinAnalysisForm() {
                     onChange={() =>
                       handleCheckboxChange('addressConcerns', option)
                     }
-                    className="h-4 w-4 text-blue-600"
+                    className="h-4 w-4 text-primary"
                   />
                   <span>{option}</span>
                 </label>
@@ -465,7 +465,7 @@ export default function SkinAnalysisForm() {
         return (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold">Upload Your Photos</h2>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Please upload clear photos of your face (up to 10 photos). Include
               different angles for better analysis.
             </p>
@@ -479,12 +479,12 @@ export default function SkinAnalysisForm() {
                 required
               />
               {formData.photos.length > 0 && (
-                <p className="mt-2 text-sm text-gray-600">
+                <p className="mt-2 text-sm text-muted-foreground">
                   {formData.photos.length} photo(s) selected
                 </p>
               )}
             </div>
-            {error && <p className="text-red-600 text-sm">{error}</p>}
+            {error && <p className="text-destructive text-sm">{error}</p>}
           </div>
         );
 
@@ -513,22 +513,22 @@ export default function SkinAnalysisForm() {
     <div className="max-w-3xl mx-auto p-6">
       <div className="mb-8">
         <div className="flex justify-between items-center mb-2">
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-muted-foreground">
             Step {currentStep} of {totalSteps}
           </span>
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-muted-foreground">
             {Math.round((currentStep / totalSteps) * 100)}%
           </span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-muted rounded-full h-2">
           <div
-            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+            className="bg-primary h-2 rounded-full transition-all duration-300"
             style={{ width: `${(currentStep / totalSteps) * 100}%` }}
           />
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-lg p-8">{renderStep()}</div>
+      <div className="bg-card rounded-lg shadow-lg p-8">{renderStep()}</div>
 
       <div className="flex justify-between mt-6">
         <button
@@ -543,7 +543,7 @@ export default function SkinAnalysisForm() {
           <button
             onClick={() => setCurrentStep(currentStep + 1)}
             disabled={!canProceed()}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-primary text-primary-foreground rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Next
           </button>
@@ -551,7 +551,7 @@ export default function SkinAnalysisForm() {
           <button
             onClick={handleSubmit}
             disabled={!canProceed() || isSubmitting}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-primary text-primary-foreground rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Analyzing...' : 'Submit for Analysis'}
           </button>

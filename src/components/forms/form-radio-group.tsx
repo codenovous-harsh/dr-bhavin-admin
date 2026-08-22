@@ -44,7 +44,7 @@ function FormRadioGroup<
           {label && (
             <FormLabel>
               {label}
-              {required && <span className='ml-1 text-red-500'>*</span>}
+              {required && <span className='ml-1 text-destructive'>*</span>}
             </FormLabel>
           )}
           {description && <FormDescription>{description}</FormDescription>}

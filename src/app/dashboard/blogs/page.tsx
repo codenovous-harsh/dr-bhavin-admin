@@ -393,7 +393,7 @@ export default function BlogsPage() {
                               )}
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
-                                className="text-red-600 focus:text-red-600"
+                                className="text-destructive focus:text-destructive"
                                 onClick={() => openDeleteDialog(blog._id)}
                               >
                                 Delete Post

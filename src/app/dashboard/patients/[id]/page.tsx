@@ -11,6 +11,7 @@ import QuestionnaireDisplay from '@/features/skinAnalysis/components/questionnai
 import PhotoGallery from '@/features/skinAnalysis/components/photo-gallery';
 import AnalysisResultsDisplay from '@/features/skinAnalysis/components/analysis-results-display';
 import SendEmailDialog from '@/features/skinAnalysis/components/send-email-dialog';
+import { formatDuration } from '@/lib/format-date';
 import type { SkinAnalysis } from '@/types/skinAnalysis';
 
 interface PatientDetailPageProps {
@@ -74,17 +75,17 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
     return (
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
         <div className="flex items-center justify-between">
-          <div className="h-8 w-64 bg-gray-200 rounded animate-pulse"></div>
-          <div className="h-10 w-32 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-8 w-64 bg-muted rounded animate-pulse"></div>
+          <div className="h-10 w-32 bg-muted rounded animate-pulse"></div>
         </div>
         <div className="grid gap-6">
           {[1, 2, 3].map((i) => (
             <Card key={i} className="animate-pulse">
               <CardHeader>
-                <div className="h-6 w-48 bg-gray-200 rounded"></div>
+                <div className="h-6 w-48 bg-muted rounded"></div>
               </CardHeader>
               <CardContent>
-                <div className="h-32 bg-gray-200 rounded"></div>
+                <div className="h-32 bg-muted rounded"></div>
               </CardContent>
             </Card>
           ))}
@@ -105,7 +106,7 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <Icons.close className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <Icons.close className="h-12 w-12 text-destructive mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">Error Loading Patient</h3>
               <p className="text-sm text-muted-foreground">
                 {error || 'Patient not found'}
@@ -208,8 +209,8 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
               <p
                 className={`text-sm font-medium ${
                   analysis.researchConsent
-                    ? 'text-green-600'
-                    : 'text-amber-600'
+                    ? 'text-success'
+                    : 'text-warning'
                 }`}
               >
                 {analysis.researchConsent ? 'Opted in' : 'Opted out'}
@@ -226,10 +227,12 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
             </div>
           )}
 
+          <ProcessingTime analysis={analysis} />
+
           {analysis.status === 'failed' && analysis.error && (
             <div className="mt-4 pt-4 border-t">
-              <p className="text-sm font-medium text-red-600">Error</p>
-              <p className="text-sm text-red-600">{analysis.error}</p>
+              <p className="text-sm font-medium text-destructive">Error</p>
+              <p className="text-sm text-destructive">{analysis.error}</p>
             </div>
           )}
         </CardContent>
@@ -251,7 +254,7 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
               <h3 className="text-lg font-semibold mb-2">
                 Analysis in Progress
               </h3>
@@ -269,7 +272,7 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <Icons.dashboard className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+              <Icons.dashboard className="h-12 w-12 text-warning mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">Pending Analysis</h3>
               <p className="text-sm text-muted-foreground">
                 This analysis is queued and will be processed shortly.
@@ -277,6 +280,101 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
             </div>
           </CardContent>
         </Card>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Where the time went on this analysis run.
+ *
+ * Shown for completed AND failed records — a job that fell over after nine
+ * minutes is exactly the one worth opening. Renders nothing when the record has
+ * no timings: everything submitted before the backend started recording them,
+ * plus any run whose process died before it could write its own figures.
+ *
+ * `Total` is the job, not the patient's wait. The photo upload to R2 finishes
+ * before the job is dispatched, so Submitted → Analyzed On always reads longer.
+ */
+function ProcessingTime({ analysis }: { analysis: SkinAnalysis }) {
+  const t = analysis.timings;
+  if (!t || t.totalMs == null) return null;
+
+  // Anything the phase breakdown doesn't account for: parsing the model's
+  // markdown, and the save. Normally negligible — if it isn't, that's the
+  // finding.
+  const measured = (t.photoLoadMs ?? 0) + (t.aiMs ?? 0);
+  const otherMs = t.photoLoadMs != null && t.aiMs != null
+    ? Math.max(0, t.totalMs - measured)
+    : null;
+
+  const phases: { label: string; value: string; hint?: string }[] = [
+    {
+      label: 'Photo load',
+      value: formatDuration(t.photoLoadMs),
+      hint: t.photoCount != null ? `${t.photoCount} photos from R2` : undefined
+    },
+    {
+      label: 'AI analysis',
+      value: formatDuration(t.aiMs),
+      hint:
+        t.firstTokenMs != null
+          ? `${formatDuration(t.firstTokenMs)} to first token`
+          : undefined
+    }
+  ];
+  if (otherMs != null) {
+    phases.push({ label: 'Parsing & save', value: formatDuration(otherMs) });
+  }
+
+  const tokenBits = [
+    t.inputTokens != null ? `${t.inputTokens.toLocaleString()} in` : null,
+    t.outputTokens != null ? `${t.outputTokens.toLocaleString()} out` : null,
+    t.cacheReadTokens != null
+      ? `${t.cacheReadTokens.toLocaleString()} cached`
+      : null
+  ].filter(Boolean);
+
+  const provenance = [
+    t.model || null,
+    t.promptVersion ? `prompt v${t.promptVersion}` : null
+  ].filter(Boolean);
+
+  return (
+    <div className="mt-4 pt-4 border-t">
+      <div className="flex items-baseline justify-between gap-4">
+        <p className="text-sm font-medium text-muted-foreground">
+          Processing time
+        </p>
+        <p className="text-lg font-semibold tabular-nums">
+          {formatDuration(t.totalMs)}
+        </p>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {phases.map((phase) => (
+          <div key={phase.label}>
+            <p className="text-xs text-muted-foreground">{phase.label}</p>
+            <p className="text-sm tabular-nums">{phase.value}</p>
+            {phase.hint && (
+              <p className="text-xs text-muted-foreground">{phase.hint}</p>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {(tokenBits.length > 0 || provenance.length > 0) && (
+        <p className="mt-3 text-xs text-muted-foreground">
+          {[tokenBits.join(' · '), provenance.join(' · ')]
+            .filter(Boolean)
+            .join('  —  ')}
+        </p>
+      )}
+
+      {analysis.status === 'failed' && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Time spent before this run failed.
+        </p>
       )}
     </div>
   );

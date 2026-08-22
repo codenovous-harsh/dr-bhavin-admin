@@ -51,7 +51,7 @@ function ThumbnailTile({
       target="_blank"
       rel="noopener noreferrer"
       title="Open full-size image in a new tab"
-      className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-100 cursor-pointer hover:border-blue-500 transition-colors group block"
+      className="relative aspect-square rounded-lg overflow-hidden border border-border bg-muted cursor-pointer hover:border-primary transition-colors group block"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -64,8 +64,8 @@ function ThumbnailTile({
           solid opaque black, which hid every thumbnail. */}
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center pointer-events-none">
         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="bg-white rounded-full p-2">
-            <Icons.search className="h-5 w-5 text-gray-700" />
+          <div className="bg-card rounded-full p-2">
+            <Icons.search className="h-5 w-5 text-foreground" />
           </div>
         </div>
       </div>

@@ -19,7 +19,9 @@ interface DataTablePaginationProps<TData> extends React.ComponentProps<'div'> {
 
 export function DataTablePagination<TData>({
   table,
-  pageSizeOptions = [10, 20, 30, 40, 50],
+  // 15 is the app-wide default (see DEFAULT_PAGE_SIZE); omitting it left
+  // the 'rows per page' select rendering blank.
+  pageSizeOptions = [15, 30, 50, 100],
   className,
   ...props
 }: DataTablePaginationProps<TData>) {

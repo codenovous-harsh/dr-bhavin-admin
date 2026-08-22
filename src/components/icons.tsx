@@ -1,89 +1,67 @@
 import {
+  IconAddressBook,
   IconAlertTriangle,
-  IconArrowRight,
+  IconArticle,
+  IconBrandGithub,
   IconCheck,
   IconChevronLeft,
   IconChevronRight,
-  IconCommand,
   IconCreditCard,
-  IconFile,
-  IconFileText,
-  IconHelpCircle,
-  IconPhoto,
-  IconDeviceLaptop,
+  IconDotsVertical,
+  IconInbox,
   IconLayoutDashboard,
   IconLoader2,
-  IconLogin,
-  IconProps,
-  IconShoppingBag,
-  IconMoon,
-  IconDotsVertical,
-  IconPizza,
+  IconMicroscope,
   IconPlus,
-  IconSettings,
-  IconSun,
-  IconTrash,
-  IconBrandTwitter,
-  IconUser,
-  IconUserCircle,
-  IconUserEdit,
-  IconUserX,
-  IconX,
-  IconLayoutKanban,
-  IconBrandGithub,
-  IconFolder,
-  IconUsers,
-  IconCrown,
-  IconStar,
-  IconBox,
-  IconHeartRateMonitor,
-  IconArticle,
+  IconProps,
+  IconSearch,
+  IconShieldLock,
+  IconSparkles,
   IconStethoscope,
-  IconSearch
+  IconTrash,
+  IconUsers,
+  IconX
 } from '@tabler/icons-react';
 
 export type Icon = React.ComponentType<IconProps>;
 
+/**
+ * Icon registry.
+ *
+ * Kept deliberately small — this previously imported ~60 icons of which 15 were
+ * referenced. Each nav entry below takes a DISTINCT glyph: when the sidebar
+ * collapses to the icon rail the glyph is the only label, so two sections
+ * sharing an icon makes the rail unusable. Patients/Contacts and
+ * Enquiries/Research used to collide.
+ */
 export const Icons = {
+  // Navigation — one distinct glyph per section
   dashboard: IconLayoutDashboard,
-  logo: IconCommand,
-  login: IconLogin,
+  patients: IconStethoscope,
+  enquiries: IconInbox,
+  prompts: IconSparkles,
+  blog: IconArticle,
+  research: IconMicroscope,
+  contacts: IconAddressBook,
+  userManagement: IconShieldLock,
+
+  // General UI
+  logo: IconStethoscope,
+  add: IconPlus,
+  check: IconCheck,
   close: IconX,
-  product: IconBox,
+  search: IconSearch,
   spinner: IconLoader2,
-  kanban: IconLayoutKanban,
+  trash: IconTrash,
+  ellipsis: IconDotsVertical,
   chevronLeft: IconChevronLeft,
   chevronRight: IconChevronRight,
-  trash: IconTrash,
-  employee: IconUserX,
-  post: IconFileText,
-  page: IconFile,
-  userPen: IconUserEdit,
-  user2: IconUserCircle,
-  media: IconPhoto,
-  settings: IconSettings,
-  billing: IconCreditCard,
-  ellipsis: IconDotsVertical,
-  add: IconPlus,
   warning: IconAlertTriangle,
-  user: IconUser,
-  arrowRight: IconArrowRight,
-  help: IconHelpCircle,
-  pizza: IconPizza,
-  sun: IconSun,
-  moon: IconMoon,
-  laptop: IconDeviceLaptop,
+  billing: IconCreditCard,
   github: IconBrandGithub,
-  twitter: IconBrandTwitter,
-  check: IconCheck,
-  workspace: IconFolder,
-  teams: IconUsers,
-  pro: IconCrown,
-  exclusive: IconStar,
-  account: IconUserCircle,
-  profile: IconUser,
+
+  // Back-compat aliases for call sites not yet migrated
   users: IconUsers,
-  health: IconStethoscope,
-  blog: IconArticle,
-  search: IconSearch
+  post: IconInbox,
+  health: IconStethoscope
 };

@@ -601,14 +601,21 @@ function SidebarMenuBadge({
 function SidebarMenuSkeleton({
   className,
   showIcon = false,
+  width = '70%',
   ...props
 }: React.ComponentProps<'div'> & {
   showIcon?: boolean;
+  /**
+   * Bar width, e.g. '65%'. Pass a varied value per row for a natural look.
+   *
+   * This used to be `Math.random()` inside a useMemo, which is a hydration bug:
+   * the server picks one width, the client picks another, and React reports
+   * "server rendered HTML didn't match the client" for every skeleton row. It
+   * only surfaced once something actually rendered this component. Keep it
+   * deterministic — the caller owns the variation.
+   */
+  width?: string;
 }) {
-  // Random width between 50 to 90%.
-  const width = React.useMemo(() => {
-    return `${Math.floor(Math.random() * 40) + 50}%`;
-  }, []);
 
   return (
     <div

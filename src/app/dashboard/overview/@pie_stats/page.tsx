@@ -1,7 +1,7 @@
-import { delay } from '@/constants/mock-api';
-import { PieGraph } from '@/features/overview/components/pie-graph';
+import { EnquiryFollowUp } from '@/features/overview/components/enquiry-follow-up';
 
-export default async function Stats() {
-  await delay(1000);
-  return <PieGraph />;
+// Was a completed/failed donut, which restated the stat cards using system
+// states rather than answering a question worth acting on.
+export default function EnquiryFollowUpSlot() {
+  return <EnquiryFollowUp />;
 }

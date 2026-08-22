@@ -1,6 +1,12 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
+/** Fixed, uneven bar heights — deterministic so SSR and hydration agree. */
+const BAR_HEIGHTS = [
+  '62%', '78%', '45%', '90%', '55%', '72%',
+  '38%', '84%', '60%', '48%', '75%', '66%'
+];
+
 export function BarGraphSkeleton() {
   return (
     <Card>
@@ -22,16 +28,14 @@ export function BarGraphSkeleton() {
         </div>
       </CardHeader>
       <CardContent className='px-2 sm:p-6'>
-        {/* Bar-like shapes */}
+        {/* Bar-like shapes.
+
+            Heights are a fixed sequence, not Math.random(). This renders from a
+            loading.tsx boundary, so it is server-rendered and then hydrated —
+            a random height per bar produces a hydration mismatch on every one. */}
         <div className='flex aspect-auto h-[280px] w-full items-end justify-around gap-2 pt-8'>
-          {Array.from({ length: 12 }).map((_, i) => (
-            <Skeleton
-              key={i}
-              className='w-full'
-              style={{
-                height: `${Math.max(20, Math.random() * 100)}%`
-              }}
-            />
+          {BAR_HEIGHTS.map((height, i) => (
+            <Skeleton key={i} className='w-full' style={{ height }} />
           ))}
         </div>
       </CardContent>

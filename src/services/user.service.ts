@@ -21,7 +21,14 @@ export interface StaffUserResponse {
 }
 
 class UserService {
-  async listUsers(opts?: { role?: string; search?: string; page?: number; limit?: number }) {
+  async listUsers(opts?: {
+    role?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+    /** '-field' | 'field'. Whitelisted server-side. */
+    sortBy?: string;
+  }) {
     const response = await api.get<StaffUserListResponse>('/auth/users', { params: opts });
     return response.data.data;
   }

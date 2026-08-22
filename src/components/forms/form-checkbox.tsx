@@ -50,7 +50,7 @@ function FormCheckbox<
           <div className='space-y-1 leading-none'>
             <FormLabel>
               {checkboxLabel || label}
-              {required && <span className='ml-1 text-red-500'>*</span>}
+              {required && <span className='ml-1 text-destructive'>*</span>}
             </FormLabel>
             {description && <FormDescription>{description}</FormDescription>}
           </div>
