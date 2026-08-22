@@ -116,5 +116,6 @@
     "tw-animate-css": "^1.2.4",
     "vercel": "^39.2.3",
     "wrangler": "^4.86.0"
-  }
+  },
+  "packageManager": "npm@10.9.0"
 }
