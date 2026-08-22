@@ -12,7 +12,9 @@
     "lint:fix": "eslint src --fix && bun format",
     "lint:strict": "eslint --max-warnings=0 src",
     "format": "prettier --write .",
-    "format:check": "prettier -c -w ."
+    "format:check": "prettier -c -w .",
+    "cf:build": "opennextjs-cloudflare build",
+    "deploy": "opennextjs-cloudflare build && wrangler deploy"
   },
   "lint-staged": {
     "**/*.{js,jsx,tsx,ts,css,less,scss,sass}": [

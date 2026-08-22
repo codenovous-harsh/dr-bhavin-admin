@@ -6,3 +6,7 @@ compatibility_flags = ["nodejs_compat"]
 [assets]
 directory = ".open-next/assets"
 binding = "ASSETS"
+
+[vars]
+NEXT_PUBLIC_API_URL = "https://api.drbhavingarara.com/api"
+NEXT_PUBLIC_SENTRY_DISABLED = "true"
