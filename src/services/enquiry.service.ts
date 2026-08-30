@@ -50,6 +50,41 @@ class EnquiryService {
     );
     return res.data.data;
   }
+
+  /**
+   * Change status on a selection. `matched` counts rows the server found,
+   * which can be lower than the ids sent if a row was deleted by someone else
+   * in the meantime — worth surfacing rather than assuming success.
+   */
+  async bulkUpdateStatus(
+    ids: string[],
+    status: EnquiryStatus
+  ): Promise<{ matched: number; modified: number }> {
+    const res = await api.patch<{
+      data: { matched: number; modified: number };
+    }>(`${ENQUIRY_API_URL}/bulk`, { ids, status });
+    return res.data.data;
+  }
+
+  async remove(id: string): Promise<void> {
+    await api.delete(`${ENQUIRY_API_URL}/${id}`);
+  }
+
+  /**
+   * Permanent, with no undo.
+   *
+   * Note the `data` wrapper: axios drops the body on DELETE unless it is passed
+   * under `config.data`, so writing this like the patch above would send an
+   * empty body and the server would reject it as "ids must be a non-empty
+   * array" — which reads like a client bug rather than a transport quirk.
+   */
+  async bulkRemove(ids: string[]): Promise<{ deleted: number }> {
+    const res = await api.delete<{ data: { deleted: number } }>(
+      `${ENQUIRY_API_URL}/bulk`,
+      { data: { ids } }
+    );
+    return res.data.data;
+  }
 }
 
 const enquiryService = new EnquiryService();
