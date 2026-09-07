@@ -7,6 +7,7 @@ import type {
   SkinAnalysisListResponse,
   SkinAnalysisStatsResponse,
   SkinAnalysisQueryOptions,
+  FollowUpStatus,
 } from '@/types/skinAnalysis';
 
 const SKIN_ANALYSIS_API_URL = '/skin-analysis';
@@ -170,6 +171,34 @@ class SkinAnalysisService {
     );
 
     return response.data.data;
+  }
+
+  /**
+   * Update the staff follow-up status on one submission (Admin only) —
+   * separate from the AI processing `status`.
+   */
+  async updateFollowUpStatus(id: string, status: FollowUpStatus): Promise<SkinAnalysis> {
+    const res = await api.patch<{ data: SkinAnalysis }>(
+      `${SKIN_ANALYSIS_API_URL}/${id}/follow-up-status`,
+      { status }
+    );
+    return res.data.data;
+  }
+
+  /**
+   * Change follow-up status on a selection (Admin only). `modified` counts
+   * what the server actually changed, which can be lower than the ids sent
+   * if a row was deleted by someone else in the meantime.
+   */
+  async bulkUpdateFollowUpStatus(
+    ids: string[],
+    status: FollowUpStatus
+  ): Promise<{ matched: number; modified: number }> {
+    const res = await api.patch<{ data: { matched: number; modified: number } }>(
+      `${SKIN_ANALYSIS_API_URL}/bulk/follow-up-status`,
+      { ids, status }
+    );
+    return res.data.data;
   }
 }
 

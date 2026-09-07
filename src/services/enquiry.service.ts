@@ -5,7 +5,7 @@ const ENQUIRY_API_URL = '/enquiries';
 
 
 export interface EnquiryStats {
-  counts: { new: number; contacted: number; closed: number; spam: number };
+  counts: { new: number; contacted: number; booked: number; closed: number; spam: number };
   awaitingFollowUp: number;
   oldestUnactioned: {
     createdAt: string;

@@ -29,6 +29,7 @@ import {
 import { DataTableColumnHeader } from '@/components/ui/table/data-table-column-header';
 import { ServerDataTable } from '@/components/ui/table/server-data-table';
 import { useServerTable } from '@/hooks/use-server-table';
+import { notifyQueueCountsChanged } from '@/hooks/use-unread-counts';
 import { formatDate } from '@/lib/format-date';
 import enquiryService from '@/services/enquiry.service';
 import type { Enquiry, EnquiryStatus } from '@/types/enquiry';
@@ -41,6 +42,7 @@ import type { Enquiry, EnquiryStatus } from '@/types/enquiry';
 const STATUS_OPTIONS: { label: string; value: EnquiryStatus }[] = [
   { label: 'New', value: 'new' },
   { label: 'Contacted', value: 'contacted' },
+  { label: 'Booked', value: 'booked' },
   { label: 'Closed', value: 'closed' }
 ];
 
@@ -55,6 +57,7 @@ const BULK_STATUS_OPTIONS: { label: string; value: EnquiryStatus }[] = [
 const STATUS_CLASS: Record<string, string> = {
   new: 'border-primary/50 bg-primary/10 text-foreground border',
   contacted: 'border-warning/50 bg-warning/10 text-foreground border',
+  booked: 'border-chart-2/50 bg-chart-2/10 text-foreground border',
   closed: 'border-success/50 bg-success/10 text-foreground border',
   spam: 'border-border bg-muted text-muted-foreground border'
 };
@@ -270,6 +273,9 @@ export function EnquiriesTable({
   const afterMutation = React.useCallback(() => {
     table.resetRowSelection();
     setLocalRefresh((n) => n + 1);
+    // The bulk actions live here, not on the page, so nothing else would know
+    // the counts moved — the cards above and the sidebar badge both listen.
+    notifyQueueCountsChanged();
   }, [table]);
 
   const applyBulkStatus = async (status: EnquiryStatus) => {

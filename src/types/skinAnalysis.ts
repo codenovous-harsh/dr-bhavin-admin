@@ -113,6 +113,10 @@ export interface SkinAnalysisTimings {
 }
 
 // Main Skin Analysis Interface
+// Staff follow-up tracking — separate from the AI processing `status` below.
+// Same set as EnquiryStatus so the two queues behave identically in the UI.
+export type FollowUpStatus = 'new' | 'contacted' | 'booked' | 'closed' | 'spam';
+
 export interface SkinAnalysis {
   _id: string;
   firstName: string;
@@ -129,6 +133,7 @@ export interface SkinAnalysis {
   photos: SkinAnalysisPhoto[];
   analysis: SkinAnalysisResult;
   status: 'pending' | 'processing' | 'completed' | 'failed';
+  followUpStatus: FollowUpStatus;
   error?: string;
   processedAt?: string;
   timings?: SkinAnalysisTimings;
@@ -183,6 +188,13 @@ export interface SkinAnalysisStats {
   completedAnalyses: number;
   failedAnalyses: number;
   pendingAnalyses: number;
+  followUpCounts: {
+    new: number;
+    contacted: number;
+    booked: number;
+    closed: number;
+    spam: number;
+  };
 }
 
 // Analysis Stats Response Interface
@@ -219,6 +231,7 @@ export interface SkinAnalysisQueryOptions {
   page?: number;
   limit?: number;
   status?: 'pending' | 'processing' | 'completed' | 'failed';
+  followUpStatus?: FollowUpStatus;
 }
 
 // Questionnaire Options (for form rendering)

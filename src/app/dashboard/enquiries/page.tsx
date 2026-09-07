@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -23,29 +23,72 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
+import { StatusStatsRow } from '@/components/status-stats-row';
+import {
+  QUEUE_COUNTS_CHANGED,
+  notifyQueueCountsChanged
+} from '@/hooks/use-unread-counts';
 import { EnquiriesTable } from '@/features/enquiries/components/enquiries-table';
-import enquiryService from '@/services/enquiry.service';
+import enquiryService, { type EnquiryStats } from '@/services/enquiry.service';
 import type { Enquiry, EnquiryStatus } from '@/types/enquiry';
 
-const STATUSES: EnquiryStatus[] = ['new', 'contacted', 'closed', 'spam'];
+const STATUSES: EnquiryStatus[] = ['new', 'contacted', 'booked', 'closed', 'spam'];
+
+const STATS_ITEMS = [
+  { key: 'new', label: 'New', dotClass: 'bg-primary' },
+  { key: 'contacted', label: 'Contacted', dotClass: 'bg-warning' },
+  { key: 'booked', label: 'Booked', dotClass: 'bg-chart-2' },
+  { key: 'closed', label: 'Closed', dotClass: 'bg-success' },
+  { key: 'spam', label: 'Spam', dotClass: 'bg-muted-foreground' }
+];
 
 export default function EnquiriesPage() {
   const [refreshToken, setRefreshToken] = useState(0);
+  const [stats, setStats] = useState<EnquiryStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  // Driven by the shared event rather than by refreshToken: the bulk actions
+  // live inside EnquiriesTable and never touch this component's state, so a
+  // token dependency here would miss them and leave the cards stale until a
+  // manual reload.
+  useEffect(() => {
+    let cancelled = false;
+
+    const read = () => {
+      enquiryService
+        .getStats()
+        .then((s) => {
+          if (!cancelled) setStats(s);
+        })
+        .catch(() => {})
+        .finally(() => {
+          if (!cancelled) setStatsLoading(false);
+        });
+    };
+
+    read();
+    window.addEventListener(QUEUE_COUNTS_CHANGED, read);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(QUEUE_COUNTS_CHANGED, read);
+    };
+  }, []);
+
+  // Bumping refreshToken refetches the rows; the event refreshes the cards
+  // above and the sidebar badge.
+  const handleRowMutated = useCallback(() => {
+    setRefreshToken((n) => n + 1);
+    notifyQueueCountsChanged();
+  }, []);
 
   const renderActions = useCallback(
     (enquiry: Enquiry) => (
       <div className='flex items-center gap-1'>
-        <StatusSelect
-          enquiry={enquiry}
-          onChanged={() => setRefreshToken((n) => n + 1)}
-        />
-        <DeleteRowButton
-          enquiry={enquiry}
-          onDeleted={() => setRefreshToken((n) => n + 1)}
-        />
+        <StatusSelect enquiry={enquiry} onChanged={handleRowMutated} />
+        <DeleteRowButton enquiry={enquiry} onDeleted={handleRowMutated} />
       </div>
     ),
-    []
+    [handleRowMutated]
   );
 
   return (
@@ -53,6 +96,11 @@ export default function EnquiriesPage() {
       pageTitle='Enquiries'
       pageDescription='Consultation requests submitted from the website.'
     >
+      <StatusStatsRow
+        items={STATS_ITEMS}
+        counts={stats?.counts ?? null}
+        loading={statsLoading}
+      />
       <EnquiriesTable
         refreshToken={refreshToken}
         renderActions={renderActions}

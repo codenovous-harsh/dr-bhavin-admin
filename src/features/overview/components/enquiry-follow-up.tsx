@@ -100,9 +100,12 @@ export function EnquiryFollowUp() {
           </span>
         </div>
 
-        <dl className='grid grid-cols-3 gap-3 text-sm'>
+        <dl className='grid grid-cols-4 gap-3 text-sm'>
           <Stat label='New' value={counts.new} tone='warning' />
           <Stat label='Contacted' value={counts.contacted} />
+          {/* The conversion the whole queue exists for — without it a booked
+              patient is indistinguishable from one merely phoned once. */}
+          <Stat label='Booked' value={counts.booked} tone='booked' />
           <Stat label='Closed' value={counts.closed} tone='success' />
         </dl>
 
@@ -148,23 +151,21 @@ function Stat({
 }: {
   label: string;
   value: number;
-  tone?: 'warning' | 'success';
+  tone?: 'warning' | 'success' | 'booked';
 }) {
+  const toneClass =
+    tone === 'warning'
+      ? 'bg-warning'
+      : tone === 'booked'
+        ? 'bg-chart-2'
+        : 'bg-success';
+
   return (
     <div className='space-y-1'>
       <dt className='text-muted-foreground text-xs'>{label}</dt>
       <dd className='flex items-center gap-1.5 font-medium tabular-nums'>
         {/* Tint marks state; the label carries the meaning, never colour alone. */}
-        {tone && (
-          <span
-            aria-hidden
-            className={
-              tone === 'warning'
-                ? 'bg-warning size-2 rounded-full'
-                : 'bg-success size-2 rounded-full'
-            }
-          />
-        )}
+        {tone && <span aria-hidden className={`${toneClass} size-2 rounded-full`} />}
         {value}
       </dd>
     </div>

@@ -21,10 +21,12 @@ import {
   SidebarMenuSkeleton,
   SidebarRail
 } from '@/components/ui/sidebar';
+import { Badge } from '@/components/ui/badge';
 import { UserAvatarProfile } from '@/components/user-avatar-profile';
 import { navItems } from '@/config/nav-config';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useFilteredNavItems } from '@/hooks/use-nav';
+import { useUnreadCounts } from '@/hooks/use-unread-counts';
 import { authService } from '@/services/auth.service';
 import {
   IconLogout,
@@ -47,6 +49,8 @@ export default function AppSidebar() {
   const router = useRouter();
   const { items, isLoading } = useFilteredNavItems(navItems);
   const { user } = useCurrentUser();
+  // Unactioned counts for the queue items — see use-unread-counts.
+  const unreadCounts = useUnreadCounts();
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
 
   const handleLogout = async () => {
@@ -136,15 +140,22 @@ export default function AppSidebar() {
                   const Icon = item.icon ? Icons[item.icon] : Icons.logo;
                   const isActive =
                     pathname === item.url || pathname.startsWith(`${item.url}/`);
+                  // Queues only: everything else resolves to undefined and
+                  // renders exactly as it did before.
+                  const unread = unreadCounts[item.url] ?? 0;
 
                   return (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton
                         asChild
-                        tooltip={item.title}
+                        // The count rides along in the collapsed rail's tooltip,
+                        // where the badge itself has no room to render.
+                        tooltip={
+                          unread > 0 ? `${item.title} (${unread} new)` : item.title
+                        }
                         isActive={isActive}
                         size='lg'
-                        // Two things:
+                        // Three things:
                         //  - Active item wears the brand accent. The cva default
                         //    is `bg-sidebar-accent` (a neutral wash); under an
                         //    accent-only palette the active row is one of the
@@ -153,7 +164,8 @@ export default function AppSidebar() {
                         //    3.5rem rail's content box, so the glyph lands dead
                         //    centre. `size-10!` has to out-specify the cva
                         //    base's `size-8!`.
-                        className='data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!'
+                        //  - `relative` anchors the collapsed-rail unread dot.
+                        className='relative data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!'
                       >
                         <Link href={item.url}>
                           {/* No margin on the icon: the button's own `gap-2`
@@ -164,6 +176,25 @@ export default function AppSidebar() {
                           <span className='truncate group-data-[collapsible=icon]:hidden'>
                             {item.title}
                           </span>
+                          {unread > 0 && (
+                            <>
+                              <Badge
+                                variant='secondary'
+                                className='ml-auto shrink-0 px-1.5 tabular-nums group-data-[collapsible=icon]:hidden'
+                              >
+                                {unread > 99 ? '99+' : unread}
+                                {/* Without this it reads as "Enquiries 5". */}
+                                <span className='sr-only'> new</span>
+                              </Badge>
+                              {/* Collapsed rail hides the label and the badge,
+                                  which would leave a waiting queue invisible.
+                                  A dot keeps the signal in the space there is. */}
+                              <span
+                                className='bg-primary absolute top-1 right-1 hidden size-2 rounded-full group-data-[collapsible=icon]:block'
+                                aria-hidden
+                              />
+                            </>
+                          )}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
