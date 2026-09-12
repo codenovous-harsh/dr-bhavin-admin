@@ -595,7 +595,10 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
                         disabled={authorsLoading || selectableAuthors.length === 0}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          {/* w-full/min-w-0 because the shared SelectTrigger is
+                              w-fit + whitespace-nowrap: left alone it grows to
+                              fit the selected name and overflows the card. */}
+                          <SelectTrigger className="w-full min-w-0">
                             <SelectValue
                               placeholder={
                                 authorsLoading ? 'Loading authors…' : 'Select an author'
@@ -605,10 +608,16 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
                         </FormControl>
                         <SelectContent>
                           {selectableAuthors.map((author) => (
+                            // Name only. Radix renders the selected item's own
+                            // children inside the trigger, so anything added
+                            // here — a job title, say — has to fit in the
+                            // control too. The card below already shows the
+                            // full title and bio.
                             <SelectItem key={author._id} value={author._id}>
-                              {author.name}
-                              {author.title ? ` — ${author.title}` : ''}
-                              {author.isActive ? '' : ' (inactive)'}
+                              <span className="min-w-0 truncate">
+                                {author.name}
+                                {author.isActive ? '' : ' (inactive)'}
+                              </span>
                             </SelectItem>
                           ))}
                         </SelectContent>

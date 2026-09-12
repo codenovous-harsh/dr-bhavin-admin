@@ -286,7 +286,8 @@ export default function AuthorsPage() {
           {needsReassign && (
             <div className="space-y-2">
               <Select value={reassignTo} onValueChange={setReassignTo}>
-                <SelectTrigger>
+                {/* Same w-fit trigger caveat as the byline picker. */}
+                <SelectTrigger className="w-full min-w-0">
                   <SelectValue placeholder="Reassign posts to…" />
                 </SelectTrigger>
                 <SelectContent>
