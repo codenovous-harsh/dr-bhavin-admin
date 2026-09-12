@@ -64,6 +64,15 @@ export const navItems: NavItem[] = [
     access: { role: 'editor' }
   },
   {
+    title: 'Authors',
+    url: '/dashboard/authors',
+    icon: 'authors',
+    isActive: false,
+    shortcut: ['b', 'a'],
+    items: [],
+    access: { role: 'editor' }
+  },
+  {
     title: 'Clinical Research',
     url: '/dashboard/research',
     icon: 'research',

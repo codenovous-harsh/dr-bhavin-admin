@@ -143,13 +143,7 @@ class BlogService {
     featuredImageUrl?: string;
     featuredImageKey?: string;
     featuredImageAlt?: string;
-    author: {
-      name: string;
-      avatarUrl?: string;
-      avatarKey?: string;
-      title?: string;
-      bio?: string;
-    };
+    authorId: string;
     tags: string[];
     status: 'draft' | 'published';
     isFeatured: boolean;
@@ -181,17 +175,9 @@ class BlogService {
               }
             }
           : {}),
-        author: {
-          name: blogData.author.name,
-          avatar: blogData.author.avatarUrl && blogData.author.avatarKey
-            ? {
-                url: blogData.author.avatarUrl,
-                key: blogData.author.avatarKey
-              }
-            : undefined,
-          title: blogData.author.title || 'Author',
-          bio: blogData.author.bio || ''
-        },
+        // The byline is a reference. The backend resolves it into the
+        // snapshot stored on the post, so no author display fields are sent.
+        authorId: blogData.authorId,
         tags: blogData.tags,
         status: blogData.status,
         isFeatured: blogData.isFeatured,
@@ -224,13 +210,7 @@ class BlogService {
       featuredImageUrl?: string;
       featuredImageKey?: string;
       featuredImageAlt?: string;
-      author?: {
-        name?: string;
-        avatarUrl?: string;
-        avatarKey?: string;
-        title?: string;
-        bio?: string;
-      };
+      authorId?: string;
       tags?: string[];
       status?: 'draft' | 'published';
       isFeatured?: boolean;
@@ -261,22 +241,8 @@ class BlogService {
         payload.featuredImage = { alt: blogData.featuredImageAlt } as any;
       }
 
-      // Handle author update
-      if (blogData.author && blogData.author.name) {
-        payload.author = {
-          name: blogData.author.name,
-          title: blogData.author.title,
-          bio: blogData.author.bio
-        };
-
-        // Include avatar only if new URLs are provided
-        if (blogData.author.avatarUrl && blogData.author.avatarKey) {
-          payload.author.avatar = {
-            url: blogData.author.avatarUrl,
-            key: blogData.author.avatarKey
-          };
-        }
-      }
+      // Reassigning the post to a different author is a single id.
+      if (blogData.authorId) payload.authorId = blogData.authorId;
 
       // Add other fields
       if (blogData.title) payload.title = blogData.title;

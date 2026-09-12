@@ -6,6 +6,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { blogFormSchema, type BlogFormValues, type Blog } from '@/types/blog';
 import { blogService } from '@/services/blog.service';
+import { authorService } from '@/services/author.service';
+import type { Author } from '@/types/author';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
@@ -13,6 +15,22 @@ import { FormInput } from '@/components/forms/form-input';
 import { FormTextarea } from '@/components/forms/form-textarea';
 import { FormFileUpload } from '@/components/forms/form-file-upload';
 import { FormSwitch } from '@/components/forms/form-switch';
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import Link from 'next/link';
 import { RichTextEditor } from '@/components/rich-text-editor';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -47,17 +65,10 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
     key: initialData?.featuredImage?.key
   });
 
-  // Upload state for author avatar
-  const [avatarUpload, setAvatarUpload] = useState<{
-    uploading: boolean;
-    url?: string;
-    key?: string;
-    error?: string;
-  }>({
-    uploading: false,
-    url: initialData?.author?.avatar?.url,
-    key: initialData?.author?.avatar?.key
-  });
+  // Authors to choose a byline from. Loaded once; the profile itself (name,
+  // title, bio, avatar) is edited under /dashboard/authors, not here.
+  const [authors, setAuthors] = useState<Author[]>([]);
+  const [authorsLoading, setAuthorsLoading] = useState(true);
 
   const form = useForm<BlogFormValues>({
     resolver: zodResolver(blogFormSchema),
@@ -69,13 +80,7 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
       featuredImageUrl: initialData?.featuredImage.url || undefined,
       featuredImageKey: initialData?.featuredImage.key || undefined,
       featuredImageAlt: initialData?.featuredImage?.alt || '',
-      author: {
-        name: initialData?.author.name || '',
-        avatarUrl: initialData?.author.avatar?.url || undefined,
-        avatarKey: initialData?.author.avatar?.key || undefined,
-        title: initialData?.author.title || 'Author',
-        bio: initialData?.author.bio || ''
-      },
+      authorId: initialData?.authorId ? String(initialData.authorId) : '',
       tags: initialData?.tags || [],
       status: initialData?.status || 'draft',
       isFeatured: initialData?.isFeatured || false,
@@ -93,6 +98,16 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
       }
     }
   });
+
+  const watchedAuthorId = form.watch('authorId');
+
+  // Inactive authors are hidden from the picker, EXCEPT the one already on this
+  // post: an old article whose writer has since left must still open, save and
+  // keep its byline rather than silently losing it.
+  const selectableAuthors = authors.filter(
+    (author) => author.isActive || author._id === watchedAuthorId
+  );
+  const selectedAuthor = authors.find((author) => author._id === watchedAuthorId);
 
   const addTag = () => {
     const trimmedTag = tagInput.trim();
@@ -164,34 +179,6 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
     }
   };
 
-  // Upload handler for author avatar
-  const uploadAuthorAvatar = async (file: File) => {
-    setAvatarUpload({ uploading: true });
-
-    try {
-      const response = await blogService.uploadImage(file);
-      const url = response.data?.url;
-      const key = response.data?.key;
-
-      if (!url || !key) {
-        throw new Error('Invalid upload response');
-      }
-
-      setAvatarUpload({ uploading: false, url, key });
-      form.setValue('author.avatarUrl', url, { shouldValidate: true });
-      form.setValue('author.avatarKey', key, { shouldValidate: true });
-
-      toast.success('Author avatar uploaded successfully');
-    } catch (error: any) {
-      console.error('Author avatar upload error:', error);
-      setAvatarUpload({
-        uploading: false,
-        error: error.message || 'Upload failed'
-      });
-      toast.error(error.message || 'Failed to upload author avatar');
-    }
-  };
-
   // Watch for featured image file changes and auto-upload
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
@@ -209,22 +196,20 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
     return () => subscription.unsubscribe();
   }, [form.watch]);
 
-  // Watch for author avatar file changes and auto-upload
+  // Load the author list for the byline picker.
   useEffect(() => {
-    const subscription = form.watch((value, { name }) => {
-      if (name === 'author.avatar' && value.author?.avatar) {
-        const file = Array.isArray(value.author.avatar)
-          ? value.author.avatar[0]
-          : value.author.avatar;
-
-        if (file instanceof File) {
-          uploadAuthorAvatar(file);
-        }
+    (async () => {
+      try {
+        const data = await authorService.getAuthors({ sortBy: 'name' });
+        setAuthors(data.authors);
+      } catch (error) {
+        console.error('Failed to load authors:', error);
+        toast.error('Failed to load authors');
+      } finally {
+        setAuthorsLoading(false);
       }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [form.watch]);
+    })();
+  }, []);
 
   const onSubmit = async (data: BlogFormValues) => {
     try {
@@ -239,13 +224,7 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
         featuredImageUrl: featuredImageUpload.url || data.featuredImageUrl || undefined,
         featuredImageKey: featuredImageUpload.key || data.featuredImageKey || undefined,
         featuredImageAlt: data.featuredImageAlt || undefined,
-        author: {
-          name: data.author.name,
-          avatarUrl: avatarUpload.url || data.author.avatarUrl || undefined,
-          avatarKey: avatarUpload.key || data.author.avatarKey || undefined,
-          title: data.author.title || 'Author',
-          bio: data.author.bio || undefined
-        },
+        authorId: data.authorId,
         tags: data.tags,
         status: data.status,
         isFeatured: data.isFeatured,
@@ -300,7 +279,7 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
     form.setValue('status', 'published');
 
     // Check if files are still uploading
-    if (featuredImageUpload.uploading || avatarUpload.uploading) {
+    if (featuredImageUpload.uploading) {
       toast.error('Please wait for files to finish uploading');
       return;
     }
@@ -308,11 +287,6 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
     // Check for upload errors
     if (featuredImageUpload.error) {
       toast.error('Featured image upload failed. Please try again.');
-      return;
-    }
-
-    if (avatarUpload.error) {
-      toast.error('Author avatar upload failed. Please try again.');
       return;
     }
 
@@ -600,77 +574,93 @@ export function BlogForm({ initialData, mode = 'create' }: BlogFormProps) {
 
             <Card>
               <CardHeader>
-                <CardTitle>Author Information</CardTitle>
+                <CardTitle>Author</CardTitle>
+                <CardDescription>
+                  Pick who wrote this. Their name, title, bio and photo come from
+                  their profile — edit those once under Authors, not per post.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <FormInput
+                <FormField
                   control={form.control}
-                  name="author.name"
-                  label="Author Name"
-                  placeholder="Enter author name"
-                  required
+                  name="authorId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Byline <span className="text-destructive">*</span>
+                      </FormLabel>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={authorsLoading || selectableAuthors.length === 0}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue
+                              placeholder={
+                                authorsLoading ? 'Loading authors…' : 'Select an author'
+                              }
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {selectableAuthors.map((author) => (
+                            <SelectItem key={author._id} value={author._id}>
+                              {author.name}
+                              {author.title ? ` — ${author.title}` : ''}
+                              {author.isActive ? '' : ' (inactive)'}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
 
-                <FormInput
-                  control={form.control}
-                  name="author.title"
-                  label="Author Title"
-                  placeholder="e.g., Cosmetic Dermatologist"
-                />
-
-                <FormTextarea
-                  control={form.control}
-                  name="author.bio"
-                  label="Author Bio"
-                  placeholder="Short 'About the author' shown at the end of the post"
-                  config={{ rows: 6, maxLength: 1000, showCharCount: true }}
-                />
-
-                <FormFileUpload
-                  control={form.control}
-                  name="author.avatar"
-                  label="Author Avatar"
-                  config={{
-                    maxSize: 2 * 1024 * 1024,
-                    maxFiles: 1,
-                    acceptedTypes: ['image/jpeg', 'image/png', 'image/webp']
-                  }}
-                />
-
-                {/* Upload progress indicator */}
-                {avatarUpload.uploading && (
-                  <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Uploading avatar...</span>
-                  </div>
-                )}
-
-                {/* Upload error */}
-                {avatarUpload.error && (
-                  <p className="mt-2 text-sm text-destructive">
-                    {avatarUpload.error}
+                {!authorsLoading && selectableAuthors.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    No authors yet.{' '}
+                    <Link
+                      href="/dashboard/authors/create"
+                      className="text-primary underline underline-offset-4"
+                    >
+                      Create one
+                    </Link>{' '}
+                    before publishing.
                   </p>
                 )}
 
-                {/* Show uploaded avatar preview */}
-                {avatarUpload.url && !avatarUpload.uploading && (
-                  <div className="mt-3">
-                    <img
-                      src={avatarUpload.url}
-                      alt="Author avatar preview"
-                      className="w-20 h-20 rounded-full object-cover"
-                    />
-                  </div>
-                )}
-
-                {/* Show existing avatar if editing and no new upload */}
-                {initialData?.author.avatar?.url && !form.watch('author.avatar') && !avatarUpload.url && (
-                  <div className="mt-2">
-                    <img
-                      src={initialData.author.avatar.url}
-                      alt="Current author avatar"
-                      className="w-20 h-20 rounded-full object-cover"
-                    />
+                {selectedAuthor && (
+                  <div className="flex gap-3 rounded-lg border p-3">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage
+                        src={selectedAuthor.avatar?.url}
+                        alt={selectedAuthor.name}
+                      />
+                      <AvatarFallback>
+                        {selectedAuthor.name
+                          .split(/\s+/)
+                          .slice(0, 2)
+                          .map((part) => part[0]?.toUpperCase())
+                          .join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">
+                        {selectedAuthor.name}
+                        {selectedAuthor.title ? `, ${selectedAuthor.title}` : ''}
+                      </p>
+                      <p className="mt-1 line-clamp-3 text-xs text-muted-foreground">
+                        {selectedAuthor.bio || 'No bio yet — add one on the author profile.'}
+                      </p>
+                      <Link
+                        href={`/dashboard/authors/edit/${selectedAuthor._id}`}
+                        className="mt-2 inline-block text-xs text-primary underline underline-offset-4"
+                      >
+                        Edit this profile
+                      </Link>
+                    </div>
                   </div>
                 )}
               </CardContent>

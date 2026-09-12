@@ -11,6 +11,13 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   DropdownMenu,
@@ -34,7 +41,9 @@ import { Icons } from '@/components/icons';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { blogService } from '@/services/blog.service';
+import { authorService } from '@/services/author.service';
 import type { Blog, BlogStats } from '@/types/blog';
+import type { Author } from '@/types/author';
 import { toast } from 'sonner';
 import { Eye, MoreVertical, Star, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -46,6 +55,9 @@ export default function BlogsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'published' | 'draft' | 'featured'>('all');
   const [blogs, setBlogs] = useState<Blog[]>([]);
+  // 'all' rather than '' — a Radix SelectItem cannot have an empty value.
+  const [authorFilter, setAuthorFilter] = useState<string>('all');
+  const [authors, setAuthors] = useState<Author[]>([]);
   const [stats, setStats] = useState<BlogStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -56,7 +68,14 @@ export default function BlogsPage() {
   useEffect(() => {
     fetchBlogs();
     fetchStats();
-  }, [activeTab]);
+  }, [activeTab, authorFilter]);
+
+  useEffect(() => {
+    authorService
+      .getAuthors({ sortBy: 'name' })
+      .then((data) => setAuthors(data.authors))
+      .catch((error) => console.error('Failed to load authors:', error));
+  }, []);
 
   const fetchBlogs = async () => {
     try {
@@ -69,6 +88,7 @@ export default function BlogsPage() {
       if (activeTab === 'published') filters.status = 'published';
       if (activeTab === 'draft') filters.status = 'draft';
       if (activeTab === 'featured') filters.isFeatured = true;
+      if (authorFilter !== 'all') filters.authorId = authorFilter;
 
       const response = await blogService.getBlogs(filters);
       setBlogs(response.data.blogs);
@@ -237,6 +257,21 @@ export default function BlogsPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="max-w-sm"
             />
+            {authors.length > 1 && (
+              <Select value={authorFilter} onValueChange={setAuthorFilter}>
+                <SelectTrigger className="w-[220px]">
+                  <SelectValue placeholder="All authors" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All authors</SelectItem>
+                  {authors.map((author) => (
+                    <SelectItem key={author._id} value={author._id}>
+                      {author.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </CardHeader>
         <CardContent>

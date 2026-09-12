@@ -1,8 +1,13 @@
 import { z } from 'zod';
 
 // Blog Author Interface
+//
+// A READ-ONLY snapshot of the Author record the post points at (`authorId`).
+// The backend rewrites it from that record on every save, so editing these
+// fields on a post does nothing — edit the author instead (/dashboard/authors).
 export interface BlogAuthor {
   name: string;
+  slug?: string;
   avatar?: {
     url?: string;
     key?: string;
@@ -39,6 +44,8 @@ export interface Blog {
   excerpt: string;
   content: string;
   featuredImage: FeaturedImage;
+  /** The Author record this post belongs to. */
+  authorId?: string | null;
   author: BlogAuthor;
   tags: string[];
   readTime: number;
@@ -108,6 +115,7 @@ export interface BlogFilters {
   isFeatured?: boolean;
   tags?: string | string[];
   search?: string;
+  authorId?: string;
   sortBy?: string;
 }
 
@@ -121,14 +129,7 @@ export interface BlogFormData {
   featuredImageUrl?: string;
   featuredImageKey?: string;
   featuredImageAlt?: string;
-  author: {
-    name: string;
-    avatar?: File | null;
-    avatarUrl?: string;
-    avatarKey?: string;
-    title?: string;
-    bio?: string;
-  };
+  authorId: string;
   tags: string[];
   status: 'draft' | 'published';
   isFeatured: boolean;
@@ -150,24 +151,6 @@ export interface BlogFormData {
 const featuredImageSchema = z.object({
   url: z.string().url('Invalid image URL'),
   key: z.string().min(1, 'Image key is required')
-});
-
-// Author Schema
-const authorSchema = z.object({
-  name: z
-    .string()
-    .min(2, 'Author name must be at least 2 characters')
-    .max(100, 'Author name cannot exceed 100 characters'),
-  avatar: z
-    .object({
-      url: z.string().url('Invalid avatar URL').optional(),
-      key: z.string().optional()
-    })
-    .optional(),
-  title: z
-    .string()
-    .max(100, 'Author title cannot exceed 100 characters')
-    .optional()
 });
 
 // Metadata Schema
@@ -227,43 +210,9 @@ export const blogFormSchema = z.object({
     .string()
     .max(160, 'Alt text cannot exceed 160 characters')
     .optional(),
-  author: z.object({
-    name: z
-      .string()
-      .min(2, 'Author name must be at least 2 characters')
-      .max(100, 'Author name cannot exceed 100 characters'),
-    avatar: z
-      .any()
-      .refine(
-        (files) => {
-          if (!files) return true;
-          if (files instanceof FileList) return files?.length <= 1;
-          if (Array.isArray(files)) return files.length <= 1;
-          return true;
-        },
-        'Only one avatar image allowed'
-      )
-      .refine(
-        (files) => {
-          if (!files) return true;
-          const file = files instanceof FileList ? files[0] : Array.isArray(files) ? files[0] : files;
-          if (!file || typeof file === 'string') return true;
-          return file.size <= 2 * 1024 * 1024;
-        },
-        'Avatar must be less than 2MB'
-      )
-      .optional(),
-    avatarUrl: z.string().url().optional(),
-    avatarKey: z.string().optional(),
-    title: z
-      .string()
-      .max(100, 'Author title cannot exceed 100 characters')
-      .optional(),
-    bio: z
-      .string()
-      .max(1000, 'Author bio cannot exceed 1000 characters')
-      .optional()
-  }),
+  // The post's byline is a reference to an Author record, not free text.
+  // Name, title, bio and avatar are edited once, under /dashboard/authors.
+  authorId: z.string().min(1, 'Select an author'),
   tags: z
     .array(z.string())
     .min(1, 'At least one tag is required')
@@ -301,15 +250,7 @@ export interface CreateBlogPayload {
     key: string;
     alt?: string;
   };
-  author: {
-    name: string;
-    avatar?: {
-      url?: string;
-      key?: string;
-    };
-    title?: string;
-    bio?: string;
-  };
+  authorId: string;
   tags: string[];
   status: 'draft' | 'published';
   isFeatured: boolean;
