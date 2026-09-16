@@ -74,10 +74,19 @@ function errorMessage(e: unknown, fallback: string) {
 
 export function EnquiriesTable({
   refreshToken,
-  renderActions
+  renderActions,
+  onOpen
 }: {
   refreshToken?: unknown;
   renderActions?: (enquiry: Enquiry) => React.ReactNode;
+  /**
+   * Opens the detail panel. Wired to the name cell rather than the whole row:
+   * the row already carries a selection checkbox and a status dropdown, and a
+   * row-level handler would fire on those too. The shared DataTable has no
+   * row-click support, and adding it there would change every table in the
+   * admin for the sake of this one.
+   */
+  onOpen?: (id: string) => void;
 }) {
   // Bumped after this component's own mutations. Folded into the same key the
   // parent's refreshToken feeds, so a bulk action here and a row action in the
@@ -149,9 +158,19 @@ export function EnquiriesTable({
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title='Name' />
         ),
-        cell: ({ row }) => (
-          <span className='font-medium'>{row.original.name}</span>
-        ),
+        cell: ({ row }) =>
+          onOpen ? (
+            <button
+              type='button'
+              onClick={() => onOpen(row.original._id)}
+              className='text-left font-medium underline-offset-4 hover:underline focus-visible:ring-ring rounded-sm focus-visible:ring-2 focus-visible:outline-none'
+              title='Open enquiry and case history'
+            >
+              {row.original.name}
+            </button>
+          ) : (
+            <span className='font-medium'>{row.original.name}</span>
+          ),
         enableSorting: true,
         enableColumnFilter: true,
         meta: {
@@ -234,7 +253,7 @@ export function EnquiriesTable({
           ]
         : [])
     ],
-    [renderActions]
+    [renderActions, onOpen]
   );
 
   const { table, loading, error } = useServerTable<Enquiry>({

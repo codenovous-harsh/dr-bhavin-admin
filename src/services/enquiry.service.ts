@@ -43,10 +43,32 @@ class EnquiryService {
     return res.data.data;
   }
 
-  async updateStatus(id: string, status: EnquiryStatus): Promise<Enquiry> {
+  /** One enquiry with its full case history. The list endpoint omits activity. */
+  async getById(id: string): Promise<Enquiry> {
+    const res = await api.get<{ data: Enquiry }>(`${ENQUIRY_API_URL}/${id}`);
+    return res.data.data;
+  }
+
+  /**
+   * @param reason Optional free text recorded against the status change. Kept
+   *   optional on purpose — requiring it would produce a column of "n/a".
+   */
+  async updateStatus(
+    id: string,
+    status: EnquiryStatus,
+    reason?: string
+  ): Promise<Enquiry> {
     const res = await api.patch<{ status: string; data: Enquiry }>(
       `${ENQUIRY_API_URL}/${id}`,
-      { status }
+      { status, ...(reason ? { reason } : {}) }
+    );
+    return res.data.data;
+  }
+
+  async addNote(id: string, body: string): Promise<Enquiry> {
+    const res = await api.post<{ data: Enquiry }>(
+      `${ENQUIRY_API_URL}/${id}/notes`,
+      { body }
     );
     return res.data.data;
   }

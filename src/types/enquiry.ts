@@ -3,6 +3,24 @@
 // false positive is reclassified by switching it back to 'new'.
 export type EnquiryStatus = 'new' | 'contacted' | 'booked' | 'closed' | 'spam';
 
+/**
+ * One entry in an enquiry's case history — a staff note, or a status change.
+ *
+ * Both live in one list because the question this answers ("why was this
+ * closed?") is only answerable when the reason and the decision sit together in
+ * time. Append-only: nothing in the UI edits or deletes an entry.
+ */
+export interface EnquiryActivity {
+  type: 'note' | 'status';
+  body?: string;
+  /** Populated on 'status' entries only. */
+  fromStatus?: string;
+  toStatus?: string;
+  authorId?: string | null;
+  authorName?: string;
+  createdAt: string;
+}
+
 export interface Enquiry {
   _id: string;
   name: string;
@@ -19,6 +37,7 @@ export interface Enquiry {
   status: EnquiryStatus;
   source?: string;
   ipAddress?: string | null;
+  activity?: EnquiryActivity[];
   createdAt: string;
   updatedAt: string;
 }

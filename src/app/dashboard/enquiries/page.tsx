@@ -29,6 +29,7 @@ import {
   notifyQueueCountsChanged
 } from '@/hooks/use-unread-counts';
 import { EnquiriesTable } from '@/features/enquiries/components/enquiries-table';
+import { EnquiryDetailSheet } from '@/features/enquiries/components/enquiry-detail-sheet';
 import enquiryService, { type EnquiryStats } from '@/services/enquiry.service';
 import type { Enquiry, EnquiryStatus } from '@/types/enquiry';
 
@@ -44,6 +45,8 @@ const STATS_ITEMS = [
 
 export default function EnquiriesPage() {
   const [refreshToken, setRefreshToken] = useState(0);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const refresh = useCallback(() => setRefreshToken((n) => n + 1), []);
   const [stats, setStats] = useState<EnquiryStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
 
@@ -104,6 +107,14 @@ export default function EnquiriesPage() {
       <EnquiriesTable
         refreshToken={refreshToken}
         renderActions={renderActions}
+        onOpen={setOpenId}
+      />
+
+      <EnquiryDetailSheet
+        enquiryId={openId}
+        open={openId !== null}
+        onOpenChange={(o) => !o && setOpenId(null)}
+        onChanged={refresh}
       />
     </PageContainer>
   );
