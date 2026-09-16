@@ -15,6 +15,8 @@ interface ServerDataTableProps<TData> {
   columnCount: number;
   /** Extra controls rendered inside the toolbar (e.g. an export button). */
   toolbarActions?: ReactNode;
+  /** Opens a row. See DataTable — interactive cells are excluded. */
+  onRowClick?: (row: TData) => void;
 }
 
 /**
@@ -31,7 +33,8 @@ export function ServerDataTable<TData>({
   loading,
   error,
   columnCount,
-  toolbarActions
+  toolbarActions,
+  onRowClick
 }: ServerDataTableProps<TData>) {
   if (error) {
     return (
@@ -53,7 +56,7 @@ export function ServerDataTable<TData>({
   }
 
   return (
-    <DataTable table={table}>
+    <DataTable table={table} onRowClick={onRowClick}>
       <DataTableToolbar table={table}>{toolbarActions}</DataTableToolbar>
     </DataTable>
   );

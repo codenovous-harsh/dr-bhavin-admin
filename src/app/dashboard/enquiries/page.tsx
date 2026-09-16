@@ -31,9 +31,12 @@ import {
 import { EnquiriesTable } from '@/features/enquiries/components/enquiries-table';
 import { EnquiryDetailSheet } from '@/features/enquiries/components/enquiry-detail-sheet';
 import enquiryService, { type EnquiryStats } from '@/services/enquiry.service';
-import type { Enquiry, EnquiryStatus } from '@/types/enquiry';
+import {
+  ENQUIRY_STATUSES,
+  type Enquiry,
+  type EnquiryStatus
+} from '@/types/enquiry';
 
-const STATUSES: EnquiryStatus[] = ['new', 'contacted', 'booked', 'closed', 'spam'];
 
 const STATS_ITEMS = [
   { key: 'new', label: 'New', dotClass: 'bg-primary' },
@@ -86,7 +89,11 @@ export default function EnquiriesPage() {
 
   const renderActions = useCallback(
     (enquiry: Enquiry) => (
-      <div className='flex items-center gap-1'>
+      // data-no-row-click: belt and braces. Both controls below are already
+      // excluded by DataTable's interactive-element check, but marking the cell
+      // means anything added here later is excluded by default rather than
+      // silently opening the drawer on click.
+      <div className='flex items-center gap-1' data-no-row-click>
         <StatusSelect enquiry={enquiry} onChanged={handleRowMutated} />
         <DeleteRowButton enquiry={enquiry} onDeleted={handleRowMutated} />
       </div>
@@ -240,7 +247,7 @@ function StatusSelect({
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        {STATUSES.map((s) => (
+        {ENQUIRY_STATUSES.map((s) => (
           <SelectItem key={s} value={s} className='capitalize'>
             {s}
           </SelectItem>

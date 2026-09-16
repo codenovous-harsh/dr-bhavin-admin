@@ -4,6 +4,27 @@
 export type EnquiryStatus = 'new' | 'contacted' | 'booked' | 'closed' | 'spam';
 
 /**
+ * Every status, in workflow order. The single source for any UI that offers a
+ * choice of status.
+ *
+ * It exists because the list was previously written out by hand in four places,
+ * and they drifted: the detail panel offered four options and silently omitted
+ * 'booked', so an enquiry could be moved into that state from the table but
+ * never out of it from the panel. A union type does not protect against a
+ * missing member — only against a wrong one — so the list has to be derived
+ * from one place rather than retyped.
+ *
+ * Mirrors the enum on the backend Enquiry model; change both together.
+ */
+export const ENQUIRY_STATUSES: readonly EnquiryStatus[] = [
+  'new',
+  'contacted',
+  'booked',
+  'closed',
+  'spam'
+] as const;
+
+/**
  * One entry in an enquiry's case history — a staff note, or a status change.
  *
  * Both live in one list because the question this answers ("why was this

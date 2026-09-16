@@ -32,27 +32,32 @@ import { useServerTable } from '@/hooks/use-server-table';
 import { notifyQueueCountsChanged } from '@/hooks/use-unread-counts';
 import { formatDate } from '@/lib/format-date';
 import enquiryService from '@/services/enquiry.service';
-import type { Enquiry, EnquiryStatus } from '@/types/enquiry';
+import {
+  ENQUIRY_STATUSES,
+  type Enquiry,
+  type EnquiryStatus
+} from '@/types/enquiry';
 
 // 'Spam' is deliberately not offered here. It has its own toolbar toggle, and
 // the API leaves spam out of the unfiltered queue, so exposing it as a fourth
 // status would give two controls the same job — and let them disagree, e.g. a
 // "Closed" chip left showing over a list of spam, with no obvious winner.
 // Staff can still MOVE an enquiry to spam; that list lives in the row action.
-const STATUS_OPTIONS: { label: string; value: EnquiryStatus }[] = [
-  { label: 'New', value: 'new' },
-  { label: 'Contacted', value: 'contacted' },
-  { label: 'Booked', value: 'booked' },
-  { label: 'Closed', value: 'closed' }
-];
+const title = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+// Derived, so a status added to ENQUIRY_STATUSES appears here automatically
+// rather than being missed. 'spam' is filtered out on purpose — see above.
+const STATUS_OPTIONS: { label: string; value: EnquiryStatus }[] =
+  ENQUIRY_STATUSES.filter((s) => s !== 'spam').map((s) => ({
+    label: title(s),
+    value: s
+  }));
 
 // Bulk actions DO offer 'spam', unlike the column filter above. Filtering by it
 // is the toggle's job; moving rows into it is a legitimate action, and it is
 // also the route to giving junk a retention date so it clears itself.
-const BULK_STATUS_OPTIONS: { label: string; value: EnquiryStatus }[] = [
-  ...STATUS_OPTIONS,
-  { label: 'Spam', value: 'spam' }
-];
+const BULK_STATUS_OPTIONS: { label: string; value: EnquiryStatus }[] =
+  ENQUIRY_STATUSES.map((s) => ({ label: title(s), value: s }));
 
 const STATUS_CLASS: Record<string, string> = {
   new: 'border-primary/50 bg-primary/10 text-foreground border',
@@ -80,11 +85,9 @@ export function EnquiriesTable({
   refreshToken?: unknown;
   renderActions?: (enquiry: Enquiry) => React.ReactNode;
   /**
-   * Opens the detail panel. Wired to the name cell rather than the whole row:
-   * the row already carries a selection checkbox and a status dropdown, and a
-   * row-level handler would fire on those too. The shared DataTable has no
-   * row-click support, and adding it there would change every table in the
-   * admin for the sake of this one.
+   * Opens the detail panel. Wired to the whole row via DataTable's onRowClick,
+   * which ignores clicks landing on the selection checkbox, the status dropdown
+   * or the delete button — those keep doing their own job.
    */
   onOpen?: (id: string) => void;
 }) {
@@ -253,7 +256,7 @@ export function EnquiriesTable({
           ]
         : [])
     ],
-    [renderActions, onOpen]
+    [renderActions]
   );
 
   const { table, loading, error } = useServerTable<Enquiry>({
@@ -349,6 +352,7 @@ export function EnquiriesTable({
         loading={loading}
         error={error}
         columnCount={renderActions ? 8 : 7}
+        onRowClick={onOpen ? (row) => onOpen(row._id) : undefined}
         toolbarActions={
           <>
             {hasSelection && (

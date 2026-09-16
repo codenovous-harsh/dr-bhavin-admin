@@ -16,11 +16,27 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 interface DataTableProps<TData> extends React.ComponentProps<'div'> {
   table: TanstackTable<TData>;
   actionBar?: React.ReactNode;
+  /**
+   * Opens a row. Optional — tables that do not pass it behave exactly as
+   * before, with no cursor change and no handler attached.
+   *
+   * Clicks landing on something interactive are ignored, so a selection
+   * checkbox, status dropdown or delete button still does its own job rather
+   * than also opening the row. Detected by ancestor lookup, not by comparing
+   * event targets, because the click usually lands on an icon or label inside
+   * the control rather than the control itself.
+   */
+  onRowClick?: (row: TData) => void;
 }
+
+/** Controls that should swallow the click instead of opening the row. */
+const INTERACTIVE =
+  'button, a, input, select, textarea, label, [role="checkbox"], [role="combobox"], [role="menuitem"], [data-no-row-click]';
 
 export function DataTable<TData>({
   table,
   actionBar,
+  onRowClick,
   children
 }: DataTableProps<TData>) {
   return (
@@ -67,6 +83,33 @@ export function DataTable<TData>({
                     <TableRow
                       key={row.id}
                       data-state={row.getIsSelected() && 'selected'}
+                      {...(onRowClick
+                        ? {
+                            onClick: (
+                              e: React.MouseEvent<HTMLTableRowElement>
+                            ) => {
+                              if ((e.target as HTMLElement).closest(INTERACTIVE))
+                                return;
+                              // Don't hijack a text selection being made.
+                              if (window.getSelection()?.toString()) return;
+                              onRowClick(row.original);
+                            },
+                            // Keyboard parity — a row that only opens on click
+                            // cannot be reached without a mouse.
+                            tabIndex: 0,
+                            onKeyDown: (
+                              e: React.KeyboardEvent<HTMLTableRowElement>
+                            ) => {
+                              if (e.target !== e.currentTarget) return;
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                onRowClick(row.original);
+                              }
+                            },
+                            className:
+                              'cursor-pointer focus-visible:outline-ring focus-visible:outline-2 focus-visible:-outline-offset-2'
+                          }
+                        : {})}
                     >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell

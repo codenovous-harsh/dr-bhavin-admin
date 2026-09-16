@@ -22,9 +22,12 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { formatDate } from '@/lib/format-date';
 import enquiryService from '@/services/enquiry.service';
-import type { Enquiry, EnquiryActivity, EnquiryStatus } from '@/types/enquiry';
-
-const STATUSES: EnquiryStatus[] = ['new', 'contacted', 'closed', 'spam'];
+import {
+  ENQUIRY_STATUSES,
+  type Enquiry,
+  type EnquiryActivity,
+  type EnquiryStatus
+} from '@/types/enquiry';
 
 function errorMessage(e: unknown, fallback: string) {
   return (
@@ -108,6 +111,10 @@ export function EnquiryDetailSheet({
   const [loading, setLoading] = useState(false);
   const [note, setNote] = useState('');
   const [reason, setReason] = useState('');
+  // The status the dropdown is showing, which is not yet the saved status.
+  // Selecting used to commit immediately, which made the reason box beside it
+  // useless — by the time you had typed anything the change had already gone.
+  const [pendingStatus, setPendingStatus] = useState<EnquiryStatus | null>(null);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -126,6 +133,7 @@ export function EnquiryDetailSheet({
     if (open && enquiryId) {
       setNote('');
       setReason('');
+      setPendingStatus(null);
       load();
     }
   }, [open, enquiryId, load]);
@@ -145,16 +153,22 @@ export function EnquiryDetailSheet({
     }
   };
 
-  const changeStatus = async (status: EnquiryStatus) => {
-    if (!enquiryId || status === enquiry?.status) return;
+  const commitStatus = async () => {
+    if (!enquiryId || !pendingStatus || pendingStatus === enquiry?.status) return;
     setBusy(true);
     try {
       setEnquiry(
-        await enquiryService.updateStatus(enquiryId, status, reason.trim())
+        await enquiryService.updateStatus(enquiryId, pendingStatus, reason.trim())
       );
       setReason('');
-      toast.success(`Marked as ${status}`);
+      setPendingStatus(null);
+      toast.success(`Marked as ${pendingStatus}`);
       onChanged?.();
+      // Closing is the confirmation: a status change is the end of a piece of
+      // work, and the refreshed row behind shows the result. Only on success —
+      // closing on failure would hide the error toast's context and lose the
+      // reason the user had just typed.
+      onOpenChange(false);
     } catch (e: unknown) {
       toast.error(errorMessage(e, 'Could not update the status'));
     } finally {
@@ -292,22 +306,38 @@ export function EnquiryDetailSheet({
                 onChange={(e) => setReason(e.target.value)}
                 placeholder='Why is it moving? e.g. booked in for 14th, or not proceeding on cost.'
               />
-              <Select
-                value={enquiry.status}
-                onValueChange={(v) => changeStatus(v as EnquiryStatus)}
-                disabled={busy}
-              >
-                <SelectTrigger className='w-[180px]' aria-label='Change status'>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUSES.map((s) => (
-                    <SelectItem key={s} value={s} className='capitalize'>
-                      {s}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className='flex flex-wrap items-center gap-2'>
+                <Select
+                  value={pendingStatus ?? enquiry.status}
+                  onValueChange={(v) => setPendingStatus(v as EnquiryStatus)}
+                  disabled={busy}
+                >
+                  <SelectTrigger className='w-[180px]' aria-label='Change status'>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ENQUIRY_STATUSES.map((s) => (
+                      <SelectItem key={s} value={s} className='capitalize'>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  size='sm'
+                  disabled={
+                    busy || !pendingStatus || pendingStatus === enquiry.status
+                  }
+                  onClick={commitStatus}
+                >
+                  Update status
+                </Button>
+                {pendingStatus && pendingStatus !== enquiry.status ? (
+                  <span className='text-muted-foreground text-xs'>
+                    {enquiry.status} &rarr; {pendingStatus}, not saved yet
+                  </span>
+                ) : null}
+              </div>
             </section>
           </div>
         )}
