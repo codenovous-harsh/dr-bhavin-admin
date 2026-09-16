@@ -161,25 +161,15 @@ export function EnquiriesTable({
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title='Name' />
         ),
-        cell: ({ row }) =>
-          onOpen ? (
-            <button
-              type='button'
-              onClick={() => onOpen(row.original._id)}
-              className='text-left font-medium underline-offset-4 hover:underline focus-visible:ring-ring rounded-sm focus-visible:ring-2 focus-visible:outline-none'
-              title='Open enquiry and case history'
-            >
-              {row.original.name}
-            </button>
-          ) : (
-            <span className='font-medium'>{row.original.name}</span>
-          ),
+        cell: ({ row }) => (
+          <span className='font-medium'>{row.original.name}</span>
+        ),
         enableSorting: true,
         enableColumnFilter: true,
         meta: {
           label: 'Name',
           variant: 'text',
-          placeholder: 'Search name, email or concern…'
+          placeholder: 'Search name, email, phone or concern…'
         }
       },
       {
@@ -193,6 +183,28 @@ export function EnquiriesTable({
         ),
         enableSorting: true,
         meta: { label: 'Email' }
+      },
+      {
+        id: 'phone',
+        accessorKey: 'phone',
+        header: 'Phone',
+        // Dialable straight from the list: the common action on a new enquiry
+        // is to ring it, and making that a click saves retyping a number by
+        // eye. Enquiries taken before this field existed have none, hence the
+        // dash rather than an empty cell.
+        cell: ({ row }) =>
+          row.original.phone ? (
+            <a
+              href={`tel:${row.original.phone.replace(/[^\d+]/g, '')}`}
+              className='text-muted-foreground underline-offset-4 hover:underline'
+            >
+              {row.original.phone}
+            </a>
+          ) : (
+            <span className='text-muted-foreground'>—</span>
+          ),
+        enableSorting: false,
+        meta: { label: 'Phone' }
       },
       {
         id: 'concern',
@@ -351,7 +363,7 @@ export function EnquiriesTable({
         table={table}
         loading={loading}
         error={error}
-        columnCount={renderActions ? 8 : 7}
+        columnCount={renderActions ? 9 : 8}
         onRowClick={onOpen ? (row) => onOpen(row._id) : undefined}
         toolbarActions={
           <>

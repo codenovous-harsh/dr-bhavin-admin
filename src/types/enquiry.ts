@@ -46,6 +46,8 @@ export interface Enquiry {
   _id: string;
   name: string;
   email: string;
+  /** Optional on the type because enquiries predating the phone field have none. */
+  phone?: string;
   concern?: string;
   consultationFormat?: string;
   preferredClinic?: string;

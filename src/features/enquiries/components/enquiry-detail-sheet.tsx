@@ -207,6 +207,16 @@ export function EnquiryDetailSheet({
                   {enquiry.email}
                 </a>
               </Field>
+              {enquiry.phone ? (
+                <Field label='Phone'>
+                  <a
+                    href={`tel:${enquiry.phone.replace(/[^\d+]/g, '')}`}
+                    className='underline underline-offset-2'
+                  >
+                    {enquiry.phone}
+                  </a>
+                </Field>
+              ) : null}
               <Field label='Status'>
                 <Badge variant='secondary' className='capitalize'>
                   {enquiry.status}
