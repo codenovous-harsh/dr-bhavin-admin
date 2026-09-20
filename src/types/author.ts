@@ -14,6 +14,7 @@ export interface Author {
   slug: string;
   title?: string;
   credentialLine?: string;
+  recognition?: string;
   bio?: string;
   longBio?: string;
   avatar?: {
@@ -87,6 +88,10 @@ export const authorFormSchema = z.object({
     .string()
     .max(200, 'Credentials cannot exceed 200 characters')
     .optional(),
+  recognition: z
+    .string()
+    .max(2000, 'Recognition cannot exceed 2000 characters')
+    .optional(),
   bio: z.string().max(1000, 'Short bio cannot exceed 1000 characters').optional(),
   longBio: z.string().max(5000, 'Full bio cannot exceed 5000 characters').optional(),
   avatar: z
@@ -131,6 +136,7 @@ export interface AuthorPayload {
   slug?: string;
   title?: string;
   credentialLine?: string;
+  recognition?: string;
   bio?: string;
   longBio?: string;
   avatar?: { url?: string; key?: string };

@@ -56,6 +56,7 @@ export function AuthorForm({ initialData, mode = 'create' }: AuthorFormProps) {
       slug: initialData?.slug || '',
       title: initialData?.title || 'Author',
       credentialLine: initialData?.credentialLine || '',
+      recognition: initialData?.recognition || '',
       bio: initialData?.bio || '',
       longBio: initialData?.longBio || '',
       avatarUrl: initialData?.avatar?.url || undefined,
@@ -139,6 +140,7 @@ export function AuthorForm({ initialData, mode = 'create' }: AuthorFormProps) {
         slug: data.slug || undefined,
         title: data.title || 'Author',
         credentialLine: data.credentialLine || '',
+        recognition: data.recognition || '',
         bio: data.bio || '',
         longBio: data.longBio || '',
         // Only send the avatar when there is one; an unchanged edit must not
@@ -231,6 +233,15 @@ export function AuthorForm({ initialData, mode = 'create' }: AuthorFormProps) {
                 label="Credentials"
                 placeholder="e.g. MBBS, MRCGP · GMC No. 7155707"
                 description="Shown under the name on the profile page. Part of the site's E-E-A-T signals for medical content."
+              />
+
+              <FormTextarea
+                control={form.control}
+                name="recognition"
+                label="Recognition"
+                placeholder="Awards, fellowships, memberships and press — e.g. Fellow of the Royal College of Surgeons, finalist at the 2025 Aesthetic Awards, full member of BCAM."
+                description="Shown on the profile page under the bio. Optional."
+                config={{ rows: 4, maxLength: 2000, showCharCount: true }}
               />
 
               <FormTextarea
