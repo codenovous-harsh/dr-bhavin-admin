@@ -1,12 +1,5 @@
 'use client';
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { SkinAnalysisQuestionnaire } from '@/types/skinAnalysis';
 
@@ -23,7 +16,7 @@ type Section = {
 };
 
 // Normalise scalar/array/null/undefined into a string[] so the renderer is
-// uniform. Empty arrays signal "not answered" and render a badge.
+// uniform. An empty array means the question went unanswered.
 function toItems(value: string | string[] | null | undefined): string[] {
   if (value === null || value === undefined) return [];
   if (Array.isArray(value)) return value.filter(Boolean);
@@ -85,7 +78,7 @@ export default function QuestionnaireDisplay({
     { step: 'Legacy', title: 'Address Concerns', key: 'addressConcerns', data: toItems(q.addressConcerns), icon: '🎯' },
   ].filter((s) => s.data.length > 0);
 
-  // Group sections by step for visual separation in the accordion.
+  // Group sections by step for visual separation.
   const allSections = [...sections, ...legacySections];
   const grouped = allSections.reduce<Record<string, Section[]>>((acc, s) => {
     (acc[s.step] ||= []).push(s);
@@ -107,59 +100,59 @@ export default function QuestionnaireDisplay({
       </CardHeader>
       <CardContent className="space-y-6">
         {stepOrder.map((step) => (
-          <div key={step}>
-            <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <section key={step}>
+            <h3 className="text-muted-foreground mb-1 text-xs font-semibold tracking-wide uppercase">
               {step}
             </h3>
-            <Accordion type="multiple" className="w-full">
-              {grouped[step].map((section) => {
-                const hasData = section.data.length > 0;
-                const responseCount = section.data.length;
-                return (
-                  <AccordionItem key={section.key} value={section.key}>
-                    <AccordionTrigger className="hover:no-underline">
-                      <div className="flex items-center gap-3 text-left">
-                        <span className="text-2xl">{section.icon}</span>
-                        <div className="flex-1">
-                          <p className="font-medium">{section.title}</p>
-                          {hasData && (
-                            <p className="text-sm text-muted-foreground">
-                              {responseCount}{' '}
-                              {responseCount === 1 ? 'response' : 'responses'}
-                            </p>
-                          )}
-                        </div>
-                        {!hasData && (
-                          <Badge variant="secondary" className="ml-auto mr-4">
-                            Not answered
-                          </Badge>
-                        )}
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      {hasData ? (
-                        <ul className="space-y-2 pl-11">
-                          {section.data.map((item, index) => (
-                            <li
-                              key={index}
-                              className="flex items-start gap-2 text-sm"
+            {/* Question left, answer right, every answer on screen at once.
+                This was an accordion: each row cost a click to read, and a
+                questionnaire is something you scan across — you are comparing
+                what someone said about their medications against what they said
+                about their allergies, which is impossible one panel at a time. */}
+            <dl className="divide-border divide-y border-t">
+              {grouped[step].map((section) => (
+                <div
+                  key={section.key}
+                  className="grid grid-cols-1 gap-x-6 gap-y-0.5 py-2 sm:grid-cols-[minmax(0,15rem)_minmax(0,1fr)]"
+                >
+                  <dt className="flex items-start gap-2 text-sm font-medium">
+                    <span aria-hidden="true" className="leading-5">
+                      {section.icon}
+                    </span>
+                    <span>{section.title}</span>
+                  </dt>
+                  <dd className="text-sm">
+                    {section.data.length === 0 ? (
+                      // Said explicitly rather than left blank: on a medical
+                      // record, "not answered" and "answered with nothing" are
+                      // different facts and an empty cell conflates them.
+                      <span className="text-muted-foreground/70 italic">
+                        Not answered
+                      </span>
+                    ) : section.data.length === 1 ? (
+                      <span className="whitespace-pre-wrap">
+                        {section.data[0]}
+                      </span>
+                    ) : (
+                      <ul className="space-y-0.5">
+                        {section.data.map((item, index) => (
+                          <li key={index} className="flex gap-2">
+                            <span
+                              aria-hidden="true"
+                              className="text-muted-foreground"
                             >
-                              <span className="text-success mt-0.5">✓</span>
-                              <span>{item}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="pl-11 text-sm text-muted-foreground">
-                          No responses provided for this section
-                        </p>
-                      )}
-                    </AccordionContent>
-                  </AccordionItem>
-                );
-              })}
-            </Accordion>
-          </div>
+                              ·
+                            </span>
+                            <span className="whitespace-pre-wrap">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </section>
         ))}
       </CardContent>
     </Card>
