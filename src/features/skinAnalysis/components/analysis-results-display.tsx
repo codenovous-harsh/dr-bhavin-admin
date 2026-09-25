@@ -30,6 +30,16 @@ export default function AnalysisResultsDisplay({
   const hasTier1 = typeof analysis.tier1 === 'string' && analysis.tier1.trim().length > 0;
   const hasTier2 = typeof analysis.tier2 === 'string' && analysis.tier2.trim().length > 0;
 
+  // Anything that makes this report less than whole. Stored warnings come from
+  // the analysis run; the derived one covers records written before warnings
+  // existed, where the only sign of a missing clinical report was its absence.
+  const warnings = [...(analysis.warnings ?? [])];
+  if (warnings.length === 0 && hasTier1 && !hasTier2) {
+    warnings.push(
+      'No Tier 2 clinical report was generated for this analysis. Regenerate it before relying on it for a consultation.'
+    );
+  }
+
   // Shared prose styling for rendered markdown reports. Beyond the base
   // typography plugin, this pulls headings out with clear size/weight/colour,
   // adds a divider under the top-level section headings, and opens up spacing
@@ -47,6 +57,20 @@ export default function AnalysisResultsDisplay({
 
   return (
     <div className="space-y-6">
+      {warnings.length > 0 && (
+        <div
+          role='alert'
+          className='border-destructive/40 bg-destructive/10 text-destructive rounded-lg border px-4 py-3 text-sm'
+        >
+          <p className='font-semibold'>This report is incomplete</p>
+          <ul className='mt-1 list-disc space-y-1 pl-5'>
+            {warnings.map((w) => (
+              <li key={w}>{w}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Skin Type Card */}
       {analysis.skinType && (
         <Card>

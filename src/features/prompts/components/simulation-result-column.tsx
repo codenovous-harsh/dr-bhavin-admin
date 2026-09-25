@@ -3,23 +3,35 @@
 import { useState } from 'react';
 import type { SimulationColumnResult } from '@/types/prompt';
 
+// Model output goes into innerHTML for the bold markup, so escape it first.
+function inline(text: string) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+}
+
 function renderMarkdown(text: string) {
   const lines = text.split('\n');
   return lines.map((line, i) => {
     const trimmed = line.trim();
     if (!trimmed) return <br key={i} />;
-    if (trimmed.startsWith('## ')) {
+    // v3.x reports head their sections with ###, older ones with ##.
+    const heading = trimmed.match(/^#{1,4}\s+(.*)$/);
+    if (heading) {
       return (
         <h3 key={i} className="mt-3 text-base font-semibold">
-          {trimmed.slice(3)}
+          {heading[1]}
         </h3>
       );
     }
+    if (trimmed === '---') return <hr key={i} className="my-4 border-border" />;
     if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
-      const content = trimmed.slice(2).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      const content = inline(trimmed.slice(2));
       return <li key={i} className="ml-5 list-disc" dangerouslySetInnerHTML={{ __html: content }} />;
     }
-    const content = trimmed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    const content = inline(trimmed);
     return <p key={i} className="my-1" dangerouslySetInnerHTML={{ __html: content }} />;
   });
 }
@@ -38,11 +50,17 @@ export function SimulationResultColumn({ title, loading, result, onRetry }: Prop
     <div className="flex flex-col rounded border border-border bg-card text-card-foreground p-4">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-semibold">{title}</h3>
-        {result?.latencyMs && (
+        {!loading && result?.latencyMs ? (
           <span className="rounded bg-muted px-2 py-1 text-xs text-foreground/80">
-            {(result.latencyMs / 1000).toFixed(1)}s
+            {(result.latencyMs / 1000).toFixed(0)}s
+            {result.inputTokens != null && result.outputTokens != null && (
+              <>
+                {' · '}
+                {Math.round(result.inputTokens / 1000)}k in / {Math.round(result.outputTokens / 1000)}k out
+              </>
+            )}
           </span>
-        )}
+        ) : null}
       </div>
 
       {loading && <div className="py-8 text-center text-muted-foreground">Running…</div>}

@@ -82,8 +82,14 @@ class PromptService {
     await api.delete(`${BASE}/${id}`);
   }
 
-  async simulate(payload: SimulatePayload): Promise<SimulationResult> {
+  /** Starts a simulation and returns at once, still `running` — poll getSimulation. */
+  async startSimulation(payload: SimulatePayload): Promise<SimulationResult> {
     const res = await api.post<ApiEnvelope<SimulationResult>>(`${BASE}/simulate`, payload);
+    return res.data.data;
+  }
+
+  async getSimulation(id: string): Promise<SimulationResult> {
+    const res = await api.get<ApiEnvelope<SimulationResult>>(`${BASE}/simulate/${id}`);
     return res.data.data;
   }
 }

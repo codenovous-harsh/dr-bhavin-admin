@@ -16,14 +16,15 @@ export interface PromptTemplate {
 }
 
 export interface SimulationColumnResult {
-  systemPrompt: string;
   userPromptRendered: string;
   warnings: string[];
   response: string | null;
   latencyMs: number | null;
+  inputTokens?: number | null;
+  outputTokens?: number | null;
   error: string | null;
-  source?: 'published' | 'fallback';
-  version?: number;
+  source?: 'published' | 'fallback' | 'draft';
+  version?: number | 'draft';
   promptTemplateId?: string | null;
 }
 
@@ -41,10 +42,20 @@ export interface SimulationPatient {
   photos: { url: string; key: string }[];
 }
 
+/**
+ * A simulation runs in the background — a v3.10 analysis takes 3–5 minutes,
+ * longer than the backend allows one request — so it is started, then polled.
+ * `published` and `draft` are null until `status` leaves 'running'.
+ */
 export interface SimulationResult {
+  id: string;
+  status: 'running' | 'completed' | 'failed';
+  error: string | null;
+  createdAt: string;
+  completedAt: string | null;
   patient: SimulationPatient;
-  published: SimulationColumnResult;
-  draft: SimulationColumnResult;
+  published: SimulationColumnResult | null;
+  draft: SimulationColumnResult | null;
 }
 
 export interface CreatePromptPayload {

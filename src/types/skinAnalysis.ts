@@ -83,6 +83,8 @@ export interface SkinAnalysisResult {
   // Empty strings for legacy v1 single-tier outputs.
   tier1?: string;
   tier2?: string;
+  /** Admin-facing notes on a report that is not whole (e.g. Tier 2 truncated). */
+  warnings?: string[];
 }
 
 // Per-phase timings for the analysis job, recorded by the backend on both the
@@ -132,6 +134,21 @@ export interface SkinAnalysis {
   questionnaire: SkinAnalysisQuestionnaire;
   photos: SkinAnalysisPhoto[];
   analysis: SkinAnalysisResult;
+  /** What took the photos and how much detail they hold. Absent on older records. */
+  capture?: {
+    deviceClass: 'phone' | 'tablet' | 'computer' | 'unknown';
+    cameraWidth: number | null;
+    cameraHeight: number | null;
+    frames: {
+      angle: string;
+      width: number | null;
+      height: number | null;
+      faceWidthPx: number | null;
+      /** Live quality at capture. mmPerPx is the iris-derived scale. */
+      quality?: { mmPerPx?: number | null; sharpness?: number | null } | null;
+    }[];
+    detailLevel: 'detailed' | 'basic' | 'unknown';
+  };
   status: 'pending' | 'processing' | 'completed' | 'failed';
   followUpStatus: FollowUpStatus;
   error?: string;

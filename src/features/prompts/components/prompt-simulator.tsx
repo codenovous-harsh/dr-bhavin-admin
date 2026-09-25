@@ -1,11 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PatientPicker } from './patient-picker';
 import { SimulationResultColumn } from './simulation-result-column';
 import promptService from '@/services/prompt.service';
 import type { SimulationResult } from '@/types/prompt';
 import type { SkinAnalysis } from '@/types/skinAnalysis';
+
+// A v3.10 pair takes 3–5 minutes. Poll often enough to feel live, and give up
+// well after the backend would have marked a stuck run as failed (20 min).
+const POLL_MS = 5000;
+const GIVE_UP_MS = 25 * 60 * 1000;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 interface Props {
   draftSystemPrompt: string;
@@ -19,23 +26,56 @@ export function PromptSimulator({ draftSystemPrompt, draftUserPromptTemplate, on
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [elapsed, setElapsed] = useState(0);
+  // Bumped on every new run and on close, so a poll loop that outlives its run
+  // (retry, different patient, dialog closed) stops instead of writing stale state.
+  const runRef = useRef(0);
+
+  useEffect(() => {
+    return () => {
+      runRef.current += 1;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!loading) return;
+    const started = Date.now();
+    setElapsed(0);
+    const t = setInterval(() => setElapsed(Math.round((Date.now() - started) / 1000)), 1000);
+    return () => clearInterval(t);
+  }, [loading]);
 
   async function runSimulation(analysisId: string) {
+    const run = ++runRef.current;
     setLoading(true);
     setError(null);
     setResult(null);
     try {
-      const data = await promptService.simulate({
+      let data = await promptService.startSimulation({
         analysisId,
         draftSystemPrompt,
         draftUserPromptTemplate,
       });
+      const startedAt = Date.now();
+      while (data.status === 'running') {
+        if (Date.now() - startedAt > GIVE_UP_MS) {
+          throw new Error('The simulation is taking far longer than expected. Try again.');
+        }
+        await sleep(POLL_MS);
+        if (run !== runRef.current) return;
+        data = await promptService.getSimulation(data.id);
+      }
+      if (run !== runRef.current) return;
+      if (data.status === 'failed') {
+        setError(data.error || 'Simulation failed');
+      }
       setResult(data);
     } catch (e: unknown) {
+      if (run !== runRef.current) return;
       const err = e as { response?: { data?: { message?: string } }; message?: string };
       setError(err.response?.data?.message || err.message || 'Simulation failed');
     } finally {
-      setLoading(false);
+      if (run === runRef.current) setLoading(false);
     }
   }
 
@@ -84,6 +124,8 @@ export function PromptSimulator({ draftSystemPrompt, draftUserPromptTemplate, on
                 </div>
                 <button
                   onClick={() => {
+                    runRef.current += 1;
+                    setLoading(false);
                     setStep('pick');
                     setResult(null);
                     setError(null);
@@ -94,6 +136,15 @@ export function PromptSimulator({ draftSystemPrompt, draftUserPromptTemplate, on
                 </button>
               </div>
 
+              {loading && (
+                <div className="rounded bg-muted p-3 text-sm text-muted-foreground">
+                  Running the full analysis with both prompts — the same two-call pipeline a
+                  patient gets. This usually takes 3–5 minutes ({Math.floor(elapsed / 60)}:
+                  {String(elapsed % 60).padStart(2, '0')} so far) and costs about the same as two
+                  real analyses. You can leave this open; closing it won&apos;t stop the run.
+                </div>
+              )}
+
               {error && (
                 <div className="rounded bg-destructive/10 p-3 text-sm text-destructive">
                   {error}
@@ -103,9 +154,9 @@ export function PromptSimulator({ draftSystemPrompt, draftUserPromptTemplate, on
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <SimulationResultColumn
                   title={
-                    result?.published.source === 'fallback'
+                    result?.published?.source === 'fallback'
                       ? 'Fallback (no published prompt)'
-                      : `Currently Published — v${result?.published.version ?? '?'}`
+                      : `Currently Published — v${result?.published?.version ?? '?'}`
                   }
                   loading={loading}
                   result={result?.published || null}

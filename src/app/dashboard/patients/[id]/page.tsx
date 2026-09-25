@@ -216,6 +216,7 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
                 {analysis.researchConsent ? 'Opted in' : 'Opted out'}
               </p>
             </div>
+            <CaptureDetail analysis={analysis} />
           </div>
 
           {analysis.status === 'completed' && analysis.processedAt && (
@@ -296,6 +297,53 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
  * `Total` is the job, not the patient's wait. The photo upload to R2 finishes
  * before the job is dispatched, so Submitted → Analyzed On always reads longer.
  */
+/**
+ * What took the photos and how much skin detail they hold.
+ *
+ * Judged on the photo, not the device: what decides detail is how many pixels
+ * landed on the face, and a close-up on a good webcam can beat a phone held far
+ * away. "Basic" is fine for the AI report but too coarse for fine detail such
+ * as pores — worth knowing before reading anything fine-grained in Tier 2.
+ */
+function CaptureDetail({ analysis }: { analysis: SkinAnalysis }) {
+  const c = analysis.capture;
+  if (!c || c.deviceClass === 'unknown') return null;
+
+  const device = { phone: 'Phone', tablet: 'Tablet', computer: 'Computer', unknown: 'Unknown' }[
+    c.deviceClass
+  ];
+  const front = c.frames.find((f) => f.angle === 'front') ?? c.frames[0];
+  const camera =
+    c.cameraWidth && c.cameraHeight ? `${c.cameraWidth}×${c.cameraHeight}` : 'resolution unknown';
+  const face = front?.faceWidthPx ? ` · face ${front.faceWidthPx}px` : '';
+  // Millimetres per pixel at the face, from the iris (≈11.7 mm across in adults).
+  // What turns any later measurement from "pixels" into real units.
+  const mmPerPx = front?.quality?.mmPerPx;
+  const scale = mmPerPx ? ` · ${mmPerPx.toFixed(3)} mm/px` : '';
+
+  return (
+    <div>
+      <p className="text-sm font-medium text-muted-foreground">Photo capture</p>
+      <p className="text-sm">
+        {device} · {camera}
+        {face}
+        {scale}
+      </p>
+      {c.detailLevel !== 'unknown' && (
+        <p
+          className={`text-xs font-medium ${
+            c.detailLevel === 'detailed' ? 'text-success' : 'text-warning'
+          }`}
+        >
+          {c.detailLevel === 'detailed'
+            ? 'Detailed — supports fine-detail assessment'
+            : 'Basic — too coarse for fine detail such as pores'}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function ProcessingTime({ analysis }: { analysis: SkinAnalysis }) {
   const t = analysis.timings;
   if (!t || t.totalMs == null) return null;
