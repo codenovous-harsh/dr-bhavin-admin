@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { SkinAnalysisResult } from '@/types/skinAnalysis';
 
 interface AnalysisResultsDisplayProps {
@@ -53,7 +54,10 @@ export default function AnalysisResultsDisplay({
     'prose-p:my-3 prose-p:leading-relaxed ' +
     'prose-li:my-1 prose-ul:my-3 prose-ol:my-3 ' +
     'prose-strong:text-foreground prose-strong:font-semibold ' +
-    'prose-hr:my-6';
+    'prose-hr:my-6 ' +
+    // Tier 2 carries the sub-score rubric as a table; without remark-gfm it
+    // rendered as raw pipe characters.
+    'prose-table:text-xs prose-th:bg-muted prose-th:px-3 prose-th:py-2 prose-td:px-3 prose-td:py-2 prose-td:align-top';
 
   return (
     <div className="space-y-6">
@@ -114,7 +118,7 @@ export default function AnalysisResultsDisplay({
           </CardHeader>
           <CardContent>
             <div className={reportProse}>
-              <ReactMarkdown>{analysis.tier1!}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{analysis.tier1!}</ReactMarkdown>
             </div>
           </CardContent>
         </Card>
@@ -131,7 +135,7 @@ export default function AnalysisResultsDisplay({
           </CardHeader>
           <CardContent>
             <div className={reportProse}>
-              <ReactMarkdown>{analysis.tier2!}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{analysis.tier2!}</ReactMarkdown>
             </div>
           </CardContent>
         </Card>
@@ -145,7 +149,7 @@ export default function AnalysisResultsDisplay({
           </CardHeader>
           <CardContent>
             <div className={reportProse}>
-              <ReactMarkdown>{analysis.fullAnalysis}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{analysis.fullAnalysis}</ReactMarkdown>
             </div>
           </CardContent>
         </Card>

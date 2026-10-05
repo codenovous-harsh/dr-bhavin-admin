@@ -11,6 +11,7 @@ import QuestionnaireDisplay from '@/features/skinAnalysis/components/questionnai
 import PhotoGallery from '@/features/skinAnalysis/components/photo-gallery';
 import AnalysisResultsDisplay from '@/features/skinAnalysis/components/analysis-results-display';
 import SendEmailDialog from '@/features/skinAnalysis/components/send-email-dialog';
+import DownloadReportMenu from '@/features/skinAnalysis/components/download-report-menu';
 import { formatDuration } from '@/lib/format-date';
 import type { SkinAnalysis } from '@/types/skinAnalysis';
 
@@ -144,6 +145,21 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {analysis.status === 'completed' && analysis.analysis && (
+            <DownloadReportMenu
+              analysis={analysis.analysis}
+              patient={{
+                firstName: analysis.firstName,
+                lastName: analysis.lastName,
+                age: analysis.age,
+                gender: analysis.gender,
+                ethnicity: analysis.ethnicity,
+                submittedAt: analysis.createdAt,
+                analysedAt: analysis.processedAt,
+                analysisId: analysis._id,
+              }}
+            />
+          )}
           <Button variant="outline" onClick={() => setEmailOpen(true)}>
             Email patient
           </Button>
