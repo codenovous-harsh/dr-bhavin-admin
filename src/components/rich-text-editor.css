@@ -260,3 +260,12 @@
 .rich-text-editor-wrapper .ql-tooltip a.ql-preview {
   color: var(--primary);
 }
+
+/* Section break (divider blot → <hr>). Shown as a dashed rule so authors can
+   see and select it; the website renders it as the petal divider. */
+.rich-text-editor-wrapper .ql-editor hr {
+  border: 0;
+  border-top: 2px dashed color-mix(in oklch, var(--foreground), transparent 65%);
+  margin: 1.5rem 0;
+  cursor: default;
+}

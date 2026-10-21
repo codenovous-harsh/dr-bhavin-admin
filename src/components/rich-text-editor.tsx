@@ -8,8 +8,29 @@ import './rich-text-editor.css';
 import { toast } from 'sonner';
 import { blogService } from '@/services/blog.service';
 
-// Dynamic import to avoid SSR issues with Quill
-const ReactQuill = dynamic(() => import('react-quill-new'), {
+// Section break. Quill has no <hr> format, so without this blot any rule —
+// typed or pasted — is silently dropped. Saved as a plain <hr>, which the
+// backend sanitiser keeps (sanitize-html default tags) and the website renders
+// as the brand petal divider (.blog-body hr in the website's globals.css).
+let dividerRegistered = false;
+function registerDivider(Quill: any) {
+  if (dividerRegistered) return;
+  const BlockEmbed = Quill.import('blots/block/embed');
+  class DividerBlot extends BlockEmbed {
+    static blotName = 'divider';
+    static tagName = 'hr';
+  }
+  Quill.register(DividerBlot, true);
+  dividerRegistered = true;
+}
+
+// Dynamic import to avoid SSR issues with Quill. Custom formats are registered
+// here, on the client, before the editor first mounts.
+const ReactQuill = dynamic(async () => {
+  const mod = await import('react-quill-new');
+  registerDivider(mod.Quill);
+  return mod.default;
+}, {
   ssr: false,
   loading: () => (
     <div className="border rounded-lg p-4 min-h-[300px] animate-pulse bg-muted/20">
@@ -141,6 +162,24 @@ export function RichTextEditor({
     []
   );
 
+  // Insert a section break at the cursor (or at the end if the editor has no
+  // selection yet), then put the cursor on the line after it.
+  const insertDivider = useCallback(() => {
+    const quill = reactQuillRef.current?.getEditor?.();
+    if (!quill) {
+      toast.error('Click inside the editor, then try again');
+      return;
+    }
+    const range = quill.getSelection(true);
+    let index = range ? range.index : quill.getLength();
+    // Cursor at the end of a paragraph: put the break after that paragraph's
+    // newline, not before it, or Quill leaves an empty <p></p> below the break.
+    const [line, offset] = quill.getLine(index);
+    if (line && offset > 0 && offset === line.length() - 1) index += 1;
+    quill.insertEmbed(index, 'divider', true, 'user');
+    quill.setSelection(index + 1, 'silent');
+  }, []);
+
   // Clean up pasted PLAIN text (e.g. copied from a PDF/Word) so each source
   // line doesn't become its own paragraph. Genuine rich-HTML pastes pass
   // through Quill's own handling untouched.
@@ -229,12 +268,21 @@ export function RichTextEditor({
     'link',
     'image',
     'table',
+    'divider',
   ];
 
   return (
     <div className={cn('rich-text-editor-wrapper', className)}>
       {editable && (
         <div className="mb-2 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={insertDivider}
+            title="Insert a section break at the cursor"
+            className="rounded border px-2 py-1 text-xs hover:bg-muted"
+          >
+            Section break
+          </button>
           <button
             type="button"
             onClick={() => runTable('insertTable')}
