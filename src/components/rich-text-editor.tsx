@@ -238,7 +238,7 @@ export function RichTextEditor({
         container: [
           ['bold', 'italic', 'underline'],
           ['code'],
-          [{ header: [2, 3, false] }],
+          [{ header: [1, 2, 3, 4, 5, 6, false] }],
           [{ list: 'ordered' }, { list: 'bullet' }],
           ['blockquote'],
           ['link', 'image'],
